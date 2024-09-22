@@ -159,4 +159,30 @@ class ApiService {
 
     return response;
   }
+
+  Future<http.Response> getMeetingListing(String userId, int page) async {
+  String accessToken = await _getValidAccessToken();
+
+  final uri = Uri.parse(
+    '$baseUrl/api/v1/users/$userId/meetings/?size=12&page=$page&title=&type=&location=&date=',
+  );
+  final headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer $accessToken',
+  };
+
+  final response = await http.get(uri, headers: headers);
+
+  if (response.statusCode == 401) {
+    accessToken = await refreshAccessToken();
+    final retryHeaders = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $accessToken',
+    };
+    return await http.get(uri, headers: retryHeaders);
+  }
+
+  return response;
+}
+
 }
