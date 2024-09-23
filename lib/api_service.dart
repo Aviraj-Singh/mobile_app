@@ -113,7 +113,8 @@ class ApiService {
   Future<http.Response> getUpcomingMeetings() async {
     String accessToken = await _getValidAccessToken();
 
-    final uri = Uri.parse('$baseUrl/api/v1/dashboard/recent/upcomming_meetings?status=UPCOMMING&sync=true');
+    final uri = Uri.parse(
+        '$baseUrl/api/v1/dashboard/recent/upcomming_meetings?status=UPCOMMING&sync=true');
     final headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $accessToken',
@@ -161,28 +162,94 @@ class ApiService {
   }
 
   Future<http.Response> getMeetingListing(String userId, int page) async {
-  String accessToken = await _getValidAccessToken();
+    String accessToken = await _getValidAccessToken();
 
-  final uri = Uri.parse(
-    '$baseUrl/api/v1/users/$userId/meetings/?size=12&page=$page&title=&type=&location=&date=',
-  );
-  final headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer $accessToken',
-  };
-
-  final response = await http.get(uri, headers: headers);
-
-  if (response.statusCode == 401) {
-    accessToken = await refreshAccessToken();
-    final retryHeaders = {
+    final uri = Uri.parse(
+      '$baseUrl/api/v1/users/$userId/meetings/?size=12&page=$page&title=&type=&location=&date=',
+    );
+    final headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $accessToken',
     };
-    return await http.get(uri, headers: retryHeaders);
+
+    final response = await http.get(uri, headers: headers);
+
+    if (response.statusCode == 401) {
+      accessToken = await refreshAccessToken();
+      final retryHeaders = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      };
+      return await http.get(uri, headers: retryHeaders);
+    }
+
+    return response;
   }
 
-  return response;
-}
+  Future<http.Response> _getApiData(String endpoint) async {
+    String accessToken = await _getValidAccessToken();
+    final uri = Uri.parse('$baseUrl$endpoint');
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $accessToken',
+    };
 
+    final response = await http.get(uri, headers: headers);
+
+    if (response.statusCode == 401) {
+      // Handle token refresh and retry if needed
+      accessToken = await refreshAccessToken();
+      final retryHeaders = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      };
+      return await http.get(uri, headers: retryHeaders);
+    }
+
+    return response;
+  }
+
+  Future<List<Map<String, dynamic>>> fetchMeetingData(String meetingId) async {
+    // List of all the API endpoints
+    List<String> endpoints = [
+      '/api/v1/meeting/$meetingId/',
+      '/api/v1/meeting/$meetingId/meeting_decision/',
+      '/api/v1/meetings/$meetingId/analytics/',
+      '/api/v1/meeting/$meetingId/meeting_user_break_points/',
+      '/api/v1/meeting/$meetingId/meeting_transcription/',
+      '/api/v1/meeting/$meetingId/meeting_dependency/',
+      '/api/v1/meeting/$meetingId/meeting_announcement/',
+      '/api/v1/meeting/$meetingId/meeting_actionitem/',
+      '/api/v1/meeting/$meetingId/meeting_actionitem/?sustainable=true',
+      '/api/v1/meeting/$meetingId/meeting_attachment/',
+      '/api/v1/meeting/$meetingId/meeting_notes/',
+      '/api/v1/meeting/$meetingId/meeting_summary/',
+      '/api/v1/meeting/$meetingId/meeting_user_break_points/',
+    ];
+
+    // Fetch data from all endpoints in parallel
+    List<Future<http.Response>> futures = endpoints.map((endpoint) => _getApiData(endpoint)).toList();
+
+    List<http.Response> responses = await Future.wait(futures);
+
+    List<Map<String, dynamic>> decodedResponses = [];
+
+  for (var response in responses) {
+    if (response.statusCode == 200) {
+      try {
+        // Try parsing the JSON response
+        final decoded = jsonDecode(response.body);
+        decodedResponses.add(decoded as Map<String, dynamic>);
+      } catch (e) {
+        print('Error parsing JSON for endpoint: ${response.request?.url}');
+        print('Response body: ${response.body}');
+      }
+    } else {
+      print('Error: ${response.statusCode} from ${response.request?.url}');
+      print('Response body: ${response.body}');
+    }
+  }
+
+    return decodedResponses;
+  }
 }

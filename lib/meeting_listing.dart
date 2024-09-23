@@ -1,8 +1,10 @@
 import 'dart:convert';
+//import 'dart:ffi';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-import 'api_service.dart';  // Import your ApiService class
+import 'api_service.dart';
+import 'package:ultimeet_v1/meeting_minutes.dart';
 
 class MeetingListingPage extends StatefulWidget {
   const MeetingListingPage({super.key});
@@ -68,7 +70,30 @@ class MeetingListingPageState extends State<MeetingListingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Meeting Listing')),
+      appBar: AppBar(
+          title: const Row(children: [
+        Text(
+          'Your Meeting ',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+        Text(
+          'Facilitated by ',
+          style: TextStyle(
+            color: Colors.grey,
+            fontSize: 18,
+          ),
+        ),
+        Text(
+          'UltiMeet',
+          style: TextStyle(
+            fontStyle: FontStyle.italic,
+            fontSize: 18,
+          ),
+        ),
+      ])),
       body: _userId == null
           ? const Center(child: CircularProgressIndicator())
           : NotificationListener<ScrollNotification>(
@@ -81,7 +106,8 @@ class MeetingListingPageState extends State<MeetingListingPage> {
                 return false;
               },
               child: ListView.builder(
-                itemCount: _meetings.length + (_hasMoreData ? 1 : 0), // Add loader at the bottom
+                itemCount: _meetings.length +
+                    (_hasMoreData ? 1 : 0), // Add loader at the bottom
                 itemBuilder: (context, index) {
                   if (index == _meetings.length) {
                     return const Center(child: CircularProgressIndicator());
@@ -96,7 +122,16 @@ class MeetingListingPageState extends State<MeetingListingPage> {
   }
 
   Widget _buildMeetingCard(dynamic meeting) {
-    return Card(
+    return GestureDetector(
+      onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MeetingMinutesPage(meetingId: meeting['id']),
+        ),
+      );
+    },
+      child: Card(
       margin: const EdgeInsets.all(10),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
@@ -106,6 +141,11 @@ class MeetingListingPageState extends State<MeetingListingPage> {
             Text(
               meeting['title'] ?? 'No Title',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              '#${meeting['id']}',
+              style: const TextStyle(fontSize: 15, color: Colors.grey),
             ),
             const SizedBox(height: 5),
             Text(
@@ -130,6 +170,7 @@ class MeetingListingPageState extends State<MeetingListingPage> {
           ],
         ),
       ),
+    ),
     );
   }
 }

@@ -89,7 +89,12 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Welcome back, ${userName ?? 'User'}')),
+      appBar: AppBar(title:  Row(
+        children: [
+        const Text('Welcome back, ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),),
+        Text(userName ?? 'User', style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 18),),
+        ],)
+        ), //Text('Welcome back, ${userName ?? 'User'}')
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : meetings.isNotEmpty
