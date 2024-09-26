@@ -30,6 +30,7 @@ class MeetingListingPageState extends State<MeetingListingPage> {
   Future<void> _fetchUserId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? accessToken = prefs.getString('ACCESS_TOKEN');
+    print('Access Token: $accessToken');
     if (accessToken != null) {
       Map<String, dynamic> decodedToken = JwtDecoder.decode(accessToken);
       setState(() {
