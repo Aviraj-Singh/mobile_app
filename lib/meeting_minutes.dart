@@ -3,6 +3,7 @@ import 'api_service.dart';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ultimeet_v1/audio_player.dart';
+import 'package:ultimeet_v1/talk_time.dart';
 
 const String baseUrl = 'https://ultimeet-offline.ultimeet.io';
 
@@ -59,7 +60,7 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
         });
       } else {
         // Handle the case where the response data is incomplete
-        print('Error: Insufficient data received from API:');
+        print('Error: Insufficient data received from API');
         setState(() {
           isLoading = false;
         });
@@ -134,19 +135,9 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildCardWithBorder(),
-                  // _buildMeetingDetails(),
-                  // const SizedBox(height: 20),
-                  // Row(
-                  //   crossAxisAlignment: CrossAxisAlignment.start,
-                  //   children: [
-                  //     Expanded(child: _buildOrganizerSection()),
-                  //     const SizedBox(width: 10),
-                  //     Expanded(child: _buildParticipantsSection()),
-                  //   ],
-                  // ),
-                  // const SizedBox(height: 20),
-                  // _buildActionItems(),
                   const SizedBox(height: 20),
+                  if (meetingData!['userBreakPoints']!['data'] != null)
+                    TalkTimeWidget(userBreakPoints: meetingData!['userBreakPoints']!['data']),
                   if (audioUrl != null)
                     AudioPlayerWidget(audioUrl: audioUrl!),
                 ],

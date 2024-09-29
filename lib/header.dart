@@ -65,7 +65,7 @@ class HeaderState extends State<Header> {
     return OverlayEntry(
       builder: (context) => Positioned(
         right: 16,
-        top: position.dy + 70,
+        top: position.dy + 100,
         child: Material(
           elevation: 5,
           borderRadius: BorderRadius.circular(8),
@@ -79,17 +79,17 @@ class HeaderState extends State<Header> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                GestureDetector(
-                  onTap: () {
-                    //print('Navigate to Profile');
-                    _closeDropdown();
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text('Profile'),
-                  ),
-                ),
-                const Divider(height: 1, color: Colors.grey),
+                // GestureDetector(
+                //   onTap: () {
+                //     //print('Navigate to Profile');
+                //     _closeDropdown();
+                //   },
+                //   child: const Padding(
+                //     padding: EdgeInsets.symmetric(vertical: 8.0),
+                //     child: Text('Profile'),
+                //   ),
+                // ),
+                // const Divider(height: 1, color: Colors.grey),
                 GestureDetector(
                   onTap: () {
                     _handleLogout();
