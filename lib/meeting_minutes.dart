@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'dart:math';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ultimeet_v1/audio_player.dart';
+
+const String baseUrl = 'https://ultimeet-offline.ultimeet.io';
 
 class MeetingMinutesPage extends StatefulWidget {
   final int meetingId;
@@ -14,6 +18,7 @@ class MeetingMinutesPage extends StatefulWidget {
 class MeetingMinutesPageState extends State<MeetingMinutesPage> {
   bool isLoading = true;
   Map<String, dynamic>? meetingData;
+  String? audioUrl;
   ApiService apiService = ApiService();
 
   @override
@@ -29,6 +34,11 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
 
       // Assign response data to variables (in order)
       if (data.length >= 13) {
+        String? audioUrlFromData = data[0]['data']["audio"];
+        String token = await _getAccessToken();
+        if (audioUrlFromData != null && token.isNotEmpty) {
+          audioUrl = '$baseUrl$audioUrlFromData?key=${token.replaceAll("\"", "")}&meeting_id=${widget.meetingId.toString()}';
+        }
         setState(() {
           meetingData = {
             "meetingDetails": data[0],
@@ -62,6 +72,12 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
     }
   }
 
+  Future<String> _getAccessToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? accessToken = prefs.getString('ACCESS_TOKEN');
+    return accessToken ?? '';
+  }
+
   String getInitials(String name) {
     List<String> nameParts = name.split(' ');
     String initials = '';
@@ -85,6 +101,23 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
     );
   }
 
+  Color _getBorderColor(String type) {
+  switch (type) {
+    case "Board":
+      return const Color(0xFFDCA600);
+    case "Agile":
+      return const Color(0xFF3B8D1F);
+    case "Customer meeting":
+      return const Color(0xFF006BDE);
+    case "Team":
+      return const Color(0xFFFF8000);
+    case "Sales meeting":
+      return const Color(0xFFFF0000);
+    default:
+      return Colors.grey; // Default border color if no match
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -100,23 +133,60 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildMeetingDetails(),
+                  _buildCardWithBorder(),
+                  // _buildMeetingDetails(),
+                  // const SizedBox(height: 20),
+                  // Row(
+                  //   crossAxisAlignment: CrossAxisAlignment.start,
+                  //   children: [
+                  //     Expanded(child: _buildOrganizerSection()),
+                  //     const SizedBox(width: 10),
+                  //     Expanded(child: _buildParticipantsSection()),
+                  //   ],
+                  // ),
+                  // const SizedBox(height: 20),
+                  // _buildActionItems(),
                   const SizedBox(height: 20),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: _buildOrganizerSection()),
-                      const SizedBox(width: 10),
-                      Expanded(child: _buildParticipantsSection()),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  _buildActionItems(),
+                  if (audioUrl != null)
+                    AudioPlayerWidget(audioUrl: audioUrl!),
                 ],
               ),
             ),
     );
   }
+
+  Widget _buildCardWithBorder() {
+  // Extract the type from the meetingData
+  String meetingType = meetingData?['meetingDetails']?['data']?["type"] ?? 'N/A';
+
+  return Card(
+    shape: RoundedRectangleBorder(
+      side: BorderSide(color: _getBorderColor(meetingType), width: 1.0),
+      borderRadius: BorderRadius.circular(10.0),
+    ),
+    elevation: 3,
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildMeetingDetails(),
+          const SizedBox(height: 20),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _buildOrganizerSection()),
+              const SizedBox(width: 10),
+              Expanded(child: _buildParticipantsSection()),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildActionItems(),
+        ],
+      ),
+    ),
+  );
+}
 
   Widget _buildMeetingDetails() {
     return Column(
@@ -172,7 +242,7 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
                   ? const Text(
                       'None', // Display "None" if there are no participants
                       style:
-                          TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+                          TextStyle(fontSize: 16),
                     )
                   : SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
@@ -181,14 +251,14 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
                           // Display up to 3 participants
                           for (var i = 0;
                               i <
-                                  (participants.length > 3
-                                      ? 3
+                                  (participants.length > 2
+                                      ? 2
                                       : participants.length);
                               i++)
                             _buildParticipantAvatar(participants[i]),
 
                           // Show "+N" if more than 3 participants
-                          if (participants.length > 3)
+                          if (participants.length > 2)
                             GestureDetector(
                               onTap: () =>
                                   _showParticipantsDialog(participants),
@@ -196,7 +266,7 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
                                 radius: 20,
                                 backgroundColor: Colors.grey[300],
                                 child: Text(
-                                  '+${participants.length - 3}', // Number of additional participants
+                                  '+${participants.length - 2}', // Number of additional participants
                                   style: const TextStyle(color: Colors.black),
                                 ),
                               ),

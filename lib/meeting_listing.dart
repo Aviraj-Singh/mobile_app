@@ -30,7 +30,6 @@ class MeetingListingPageState extends State<MeetingListingPage> {
   Future<void> _fetchUserId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? accessToken = prefs.getString('ACCESS_TOKEN');
-    print('Access Token: $accessToken');
     if (accessToken != null) {
       Map<String, dynamic> decodedToken = JwtDecoder.decode(accessToken);
       setState(() {
@@ -123,55 +122,84 @@ class MeetingListingPageState extends State<MeetingListingPage> {
   }
 
   Widget _buildMeetingCard(dynamic meeting) {
+    Color borderColor;
+
+    switch (meeting['type']) {
+      case "Board":
+        borderColor = const Color(0xFFDCA600); // #DCA600
+        break;
+      case "Agile":
+        borderColor = const Color(0xFF3B8D1F); // #3B8D1F
+        break;
+      case "Customer meeting":
+        borderColor = const Color(0xFF006BDE); // #006BDE
+        break;
+      case "Team":
+        borderColor = const Color(0xFFFF8000); // #FF8000
+        break;
+      case "Sales meeting":
+        borderColor = const Color(0xFFFF0000); // #F00
+        break;
+      default:
+        borderColor = Colors.grey; // Default border color if no type matches
+    }
+
     return GestureDetector(
       onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => MeetingMinutesPage(meetingId: meeting['id']),
-        ),
-      );
-    },
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MeetingMinutesPage(meetingId: meeting['id']),
+          ),
+        );
+      },
       child: Card(
-      margin: const EdgeInsets.all(10),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              meeting['title'] ?? 'No Title',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              '#${meeting['id']}',
-              style: const TextStyle(fontSize: 15, color: Colors.grey),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              'Organizer: ${meeting['organizer']['full_name']}',
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              'Schedule: ${meeting['schedule_date']} ${meeting['schedule_time']}',
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              'Location: ${meeting['location'] ?? 'Remote'}',
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              'Status: ${meeting['status']}',
-              style: const TextStyle(fontSize: 14),
-            ),
-          ],
+        margin: const EdgeInsets.all(10),
+        child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: borderColor, width: 2.0), // Apply border color
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                meeting['title'] ?? 'No Title',
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                '#${meeting['id']}',
+                style: const TextStyle(fontSize: 15, color: Colors.grey),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                'Organizer: ${meeting['organizer']['full_name']}',
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                'Schedule: ${meeting['schedule_date']} ${meeting['schedule_time']}',
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                'Location: ${meeting['location'] ?? 'Remote'}',
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                'Status: ${meeting['status']}',
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+        ),
         ),
       ),
-    ),
     );
   }
 }
