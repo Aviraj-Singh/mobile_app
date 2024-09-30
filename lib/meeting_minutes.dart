@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:ultimeet_v1/audio_player.dart';
 import 'package:ultimeet_v1/talk_time.dart';
+import 'package:ultimeet_v1/meeting_details.dart';
 
 const String baseUrl = 'https://ultimeet-offline.ultimeet.io';
 
@@ -38,7 +38,8 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
         String? audioUrlFromData = data[0]['data']["audio"];
         String token = await _getAccessToken();
         if (audioUrlFromData != null && token.isNotEmpty) {
-          audioUrl = '$baseUrl$audioUrlFromData?key=${token.replaceAll("\"", "")}&meeting_id=${widget.meetingId.toString()}';
+          audioUrl =
+              '$baseUrl$audioUrlFromData?key=${token.replaceAll("\"", "")}&meeting_id=${widget.meetingId.toString()}';
         }
         setState(() {
           meetingData = {
@@ -103,21 +104,21 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
   }
 
   Color _getBorderColor(String type) {
-  switch (type) {
-    case "Board":
-      return const Color(0xFFDCA600);
-    case "Agile":
-      return const Color(0xFF3B8D1F);
-    case "Customer meeting":
-      return const Color(0xFF006BDE);
-    case "Team":
-      return const Color(0xFFFF8000);
-    case "Sales meeting":
-      return const Color(0xFFFF0000);
-    default:
-      return Colors.grey; // Default border color if no match
+    switch (type) {
+      case "Board":
+        return const Color(0xFFDCA600);
+      case "Agile":
+        return const Color(0xFF3B8D1F);
+      case "Customer meeting":
+        return const Color(0xFF006BDE);
+      case "Team":
+        return const Color(0xFFFF8000);
+      case "Sales meeting":
+        return const Color(0xFFFF0000);
+      default:
+        return Colors.grey; // Default border color if no match
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -129,60 +130,96 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildCardWithBorder(),
-                  const SizedBox(height: 20),
-                  if (meetingData!['userBreakPoints']!['data'] != null)
-                    TalkTimeWidget(userBreakPoints: meetingData!['userBreakPoints']!['data']),
-                  if (audioUrl != null)
-                    AudioPlayerWidget(audioUrl: audioUrl!),
-                ],
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: 300, // Set fixed height for the container
+                      child: _buildCardWithBorder(),
+                    ),
+                    const SizedBox(height: 20),
+                    if (meetingData!['userBreakPoints']!['data'] != null)
+                      TalkTimeWidget(
+                          userBreakPoints:
+                              meetingData!['userBreakPoints']!['data'],
+                          audioUrl: audioUrl!),
+                    const SizedBox(height: 20),
+                    Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(
+                            16.0), // Add some padding inside the card
+                        child: SizedBox(
+                          height: MediaQuery.of(context).size.height -
+                              350, // Adjust height as needed
+                          child: MeetingDetailsTabs(
+                            meetingDecision: meetingData!['meetingDecision'],
+                            meetingSummary: meetingData!['meetingSummary'],
+                            meetingTranscription:
+                                meetingData!['meetingTranscription'],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
     );
   }
 
   Widget _buildCardWithBorder() {
-  // Extract the type from the meetingData
-  String meetingType = meetingData?['meetingDetails']?['data']?["type"] ?? 'N/A';
+    // Extract the type from the meetingData
+    String meetingType =
+        meetingData?['meetingDetails']?['data']?["type"] ?? 'N/A';
 
-  return Card(
-    shape: RoundedRectangleBorder(
-      side: BorderSide(color: _getBorderColor(meetingType), width: 1.0),
-      borderRadius: BorderRadius.circular(10.0),
-    ),
-    elevation: 3,
-    child: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildMeetingDetails(),
-          const SizedBox(height: 20),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: _buildOrganizerSection()),
-              const SizedBox(width: 10),
-              Expanded(child: _buildParticipantsSection()),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _buildActionItems(),
-        ],
+    return Card(
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: _getBorderColor(meetingType), width: 1.0),
+        borderRadius: BorderRadius.circular(10.0),
       ),
-    ),
-  );
-}
+      elevation: 3,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildMeetingDetails(),
+            const SizedBox(height: 20),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: _buildOrganizerSection()),
+                const SizedBox(width: 10),
+                Expanded(child: _buildParticipantsSection()),
+              ],
+            ),
+            const SizedBox(height: 20),
+            _buildActionItems(),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildMeetingDetails() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+            meetingData != null
+                ? meetingData!['meetingDetails']!['data']!["title"] ?? 'Meeting'
+                : 'Meeting ID: ${widget.meetingId}',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 20),
+        Text('# ${widget.meetingId}'),
+        const SizedBox(height: 10),
         Row(
           children: [
             const Icon(Icons.calendar_today),
@@ -198,16 +235,17 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
                   "N/A",
               style: const TextStyle(fontSize: 16),
             ),
-          ],
-        ),
-        Row(
-          children: [
-            const Icon(Icons.location_on),
-            const SizedBox(width: 10),
-            Text(
-              meetingData?["location"] ?? "Offline",
-              style: const TextStyle(fontSize: 16),
-            ),
+            const SizedBox(width: 15),
+            Row(
+              children: [
+                const Icon(Icons.location_on),
+                const SizedBox(width: 10),
+                Text(
+                  meetingData?["location"] ?? "Offline",
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ],
+            )
           ],
         ),
       ],
@@ -230,16 +268,17 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
           children: [
             Expanded(
               child: participants.isEmpty
-                  ? const Text(
-                      'None', // Display "None" if there are no participants
-                      style:
-                          TextStyle(fontSize: 16),
+                  ? const Padding(
+                      padding: EdgeInsets.only(top: 7.0),
+                      child: Text(
+                        'None',
+                        style: TextStyle(fontSize: 16),
+                      ),
                     )
                   : SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          // Display up to 3 participants
                           for (var i = 0;
                               i <
                                   (participants.length > 2
@@ -247,8 +286,6 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
                                       : participants.length);
                               i++)
                             _buildParticipantAvatar(participants[i]),
-
-                          // Show "+N" if more than 3 participants
                           if (participants.length > 2)
                             GestureDetector(
                               onTap: () =>
@@ -308,7 +345,6 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
-                // Display a list of all participants with their names and avatars
                 ListView.builder(
                   shrinkWrap: true,
                   itemCount: participants.length,
@@ -364,7 +400,7 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  organizer["full_name"] ?? "N/A", // Null check with fallback
+                  organizer["full_name"] ?? "N/A",
                   style: const TextStyle(fontSize: 16),
                 ),
                 // Text(
@@ -380,7 +416,8 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
   }
 
   Widget _buildActionItems() {
-    var actionItems = meetingData?['action_items'] ?? {};
+    var actionItems =
+        meetingData?['meetingDetails']?["data"]?['action_items'] ?? {};
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,

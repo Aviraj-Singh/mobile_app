@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:ultimeet_v1/audio_player.dart';
 
 class TalkTimeWidget extends StatelessWidget {
   final List<dynamic> userBreakPoints;
+   final String? audioUrl;
 
-  const TalkTimeWidget({super.key, required this.userBreakPoints});
+  const TalkTimeWidget({super.key, required this.userBreakPoints, this.audioUrl});
 
   Color getRandomColor() {
     final Random random = Random();
@@ -30,9 +32,7 @@ class TalkTimeWidget extends StatelessWidget {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
-    print('User Break Point Data is: $userBreakPoints');
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(
@@ -48,6 +48,14 @@ class TalkTimeWidget extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
+            if (userBreakPoints.isEmpty)
+              const Padding(padding: EdgeInsets.only(left: 2.0),
+              child: Text(
+                'No User Talk Time Found',
+                style: TextStyle(fontSize: 16, color: Colors.red),
+              ),
+              )
+            else
             ...userBreakPoints.map((user) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,6 +107,9 @@ class TalkTimeWidget extends StatelessWidget {
                 }).toList(),
               );
             }).toList(),
+            const SizedBox(height: 20),
+            if (audioUrl != null)
+              AudioPlayerWidget(audioUrl: audioUrl!),
           ],
         ),
       ),
