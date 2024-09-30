@@ -4,6 +4,8 @@ import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ultimeet_v1/talk_time.dart';
 import 'package:ultimeet_v1/meeting_details.dart';
+import 'package:ultimeet_v1/action_items.dart';
+import 'package:ultimeet_v1/meeting_overview.dart';
 
 const String baseUrl = 'https://ultimeet-offline.ultimeet.io';
 
@@ -154,10 +156,10 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(
-                            16.0), // Add some padding inside the card
+                            16.0),
                         child: SizedBox(
                           height: MediaQuery.of(context).size.height -
-                              350, // Adjust height as needed
+                              300,
                           child: MeetingDetailsTabs(
                             meetingDecision: meetingData!['meetingDecision'],
                             meetingSummary: meetingData!['meetingSummary'],
@@ -167,6 +169,13 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 20),
+                    ActionItemsWidget(
+                      actionItems: List<Map<String, dynamic>>.from(
+                          meetingData!["actionItems"]["data"] ?? []),
+                    ),
+                    const SizedBox(height: 20),
+                    MeetingOverview(meetingAnalytics: meetingData!['meetingAnalytics']['data']),
                   ],
                 ),
               ),
