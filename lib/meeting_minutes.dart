@@ -145,9 +145,11 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
                     const SizedBox(height: 20),
                     if (meetingData!['userBreakPoints']!['data'] != null)
                       TalkTimeWidget(
-                          userBreakPoints:
-                              meetingData!['userBreakPoints']!['data'],
-                          audioUrl: audioUrl!),
+                          userBreakPoints: meetingData!['userBreakPoints']!['data'],
+                          audioUrl: audioUrl!,
+                          meetingTranscription: meetingData!['meetingTranscription'],
+                          onUpdate: fetchMeetingData,
+                          ),
                     const SizedBox(height: 20),
                     Card(
                       elevation: 4,
@@ -163,8 +165,7 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
                           child: MeetingDetailsTabs(
                             meetingDecision: meetingData!['meetingDecision'],
                             meetingSummary: meetingData!['meetingSummary'],
-                            meetingTranscription:
-                                meetingData!['meetingTranscription'],
+                            meetingTranscription: meetingData!['meetingTranscription'],
                           ),
                         ),
                       ),

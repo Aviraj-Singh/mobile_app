@@ -252,4 +252,34 @@ class ApiService {
 
     return decodedResponses;
   }
+
+  Future<http.Response> updateTranscriptUser(int id, String email, String name, int organisation, List<dynamic> rawTranscriptArray) async {
+  String accessToken = await _getValidAccessToken();
+
+  final uri = Uri.parse('$baseUrl/api/v1/edit/transcript-user/?id=$id&email=$email&organisation=$organisation');
+  final headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer $accessToken',
+  };
+
+  final body = jsonEncode({
+    'raw_transcript': rawTranscriptArray,
+  });
+
+  print('Body is: $body');
+
+  final response = await http.patch(uri, headers: headers, body: body);
+
+  if (response.statusCode == 401) {
+    accessToken = await refreshAccessToken();
+    final retryHeaders = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $accessToken',
+    };
+    return await http.post(uri, headers: retryHeaders, body: body);
+  }
+
+  return response;
+}
+
 }

@@ -108,7 +108,7 @@ class MeetingOverview extends StatelessWidget {
                     annotations: <GaugeAnnotation>[
                       GaugeAnnotation(
                         widget: Text(
-                          '$sustainableIndex%',
+                          '${sustainableIndex.toInt()}%',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

@@ -49,8 +49,8 @@ class ActionItemsWidget extends StatelessWidget {
                         ),
                       ),
                     ), // Action Item with restriction
-                    DataCell(Text(item['assigned_to']?.toString() ?? '--')), // Assigned to
-                    DataCell(Text(item['reporter']?.toString() ?? '--')), // Reporter
+                    DataCell(Text(item['assigned_to']?['full_name']?.toString() ?? '--')), // Assigned to
+                    DataCell(Text(item['reporter']?['full_name']?.toString() ?? '--')), // Reporter
                     DataCell(Text(item['owner']?['full_name']?.toString() ?? 'N/A')), // Display specific owner field
                     DataCell(
                       Container(

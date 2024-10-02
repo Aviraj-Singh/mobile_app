@@ -1,25 +1,38 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
 import 'package:ultimeet_v1/audio_player.dart';
+import 'api_service.dart';
+import 'dart:convert';
 
 class TalkTimeWidget extends StatelessWidget {
   final List<dynamic> userBreakPoints;
-   final String? audioUrl;
+  final String? audioUrl;
+  final Map<String, dynamic> meetingTranscription;
+  final Function() onUpdate;
 
-  const TalkTimeWidget({super.key, required this.userBreakPoints, this.audioUrl});
+  const TalkTimeWidget({
+    super.key,
+    required this.userBreakPoints,
+    required this.audioUrl,
+    required this.meetingTranscription,
+    required this.onUpdate,
+  });
 
-  Color getRandomColor() {
-    final Random random = Random();
-    // Generate a random color
-    return Color.fromARGB(
-      255,
-      random.nextInt(256),
-      random.nextInt(256),
-      random.nextInt(256),
-    );
+  Color getColorForUser(String name) {
+    int hash = name.hashCode;
+    return Color((hash & 0xFFFFFF) | 0xFF000000);
+  }
+
+  String getUpdatedName(String name) {
+    if (name.contains(',')) {
+      name = name.split(',')[0];
+    }
+    return name;
   }
 
   String getInitials(String name) {
+    if (name.contains(',')) {
+      name = name.split(',')[0];
+    }
     List<String> nameParts = name.split(' ');
     String initials = '';
     if (nameParts.isNotEmpty) {
@@ -29,6 +42,93 @@ class TalkTimeWidget extends StatelessWidget {
       }
     }
     return initials.toUpperCase();
+  }
+
+  void _showEditModal(BuildContext context, String name, String email, int id,
+      int organisation, String rawTranscript) {
+    TextEditingController nameController = TextEditingController(text: name);
+    TextEditingController emailController = TextEditingController(text: email);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Update Participants'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Participant Name',
+                ),
+              ),
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Participant Email',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final updatedName = nameController.text;
+                final updatedEmail = emailController.text;
+                try {
+                  List<dynamic> rawTranscriptArray = jsonDecode(rawTranscript);
+                  for (var entry in rawTranscriptArray) {
+                    if (entry['speaker'].contains(name)) {
+                      entry['speaker'] = updatedName + ',' + updatedEmail;
+                    }
+                  }
+                  ApiService apiService = ApiService();
+                  final response = await apiService.updateTranscriptUser(
+                    id,
+                    updatedEmail,
+                    updatedName.replaceAll(' ', '%20'),
+                    organisation,
+                    rawTranscriptArray,
+                  );
+
+                  if (response.statusCode == 200) {
+                    // Success
+                    onUpdate();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Participant updated successfully!')),
+                    );
+                  } else {
+                    // Handle error
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              'Failed to update participant: ${response.statusCode}')),
+                    );
+                    print('Failed to update participant: ${response.statusCode}');
+                  }
+                } catch (e) {
+                  print(e);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Error updating participant')),
+                  );
+                }
+
+                Navigator.of(context).pop();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -49,67 +149,100 @@ class TalkTimeWidget extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             if (userBreakPoints.isEmpty)
-              const Padding(padding: EdgeInsets.only(left: 2.0),
-              child: Text(
-                'No User Talk Time Found',
-                style: TextStyle(fontSize: 16, color: Colors.red),
-              ),
+              const Padding(
+                padding: EdgeInsets.only(left: 2.0),
+                child: Text(
+                  'No User Talk Time Found',
+                  style: TextStyle(fontSize: 16, color: Colors.red),
+                ),
               )
             else
-            ...userBreakPoints.map((user) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: user['user_break_point_text'].map<Widget>((userText) {
-                  String name = userText['name'];
-                  double talkTime = userText['talk_time'];
-                  String initials = getInitials(name);
-                  Color avatarColor = getRandomColor();
+              ...userBreakPoints.map((user) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children:
+                      user['user_break_point_text'].map<Widget>((userText) {
+                    String name = userText['name'];
+                    String updatedName = getUpdatedName(name);
+                    double talkTime = userText['talk_time'];
+                    String initials = getInitials(name);
+                    Color avatarColor = getColorForUser(name);
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 20,
-                          backgroundColor: avatarColor,
-                          child: Text(
-                            initials,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            name,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Row(
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Row(
+                        children: [
+                          Stack(
+                            //clipBehavior: Clip.none, // This allows the pencil icon to appear outside the avatar
                             children: [
-                              Expanded(
-                                child: LinearProgressIndicator(
-                                  value: talkTime / 100,
-                                  color:
-                                      talkTime > 50 ? Colors.green : Colors.red,
-                                  backgroundColor: Colors.grey[300],
+                              ClipOval(
+                                  child: Container(
+                                      color: avatarColor,
+                                      width: 40.0,
+                                      height: 40.0,
+                                      child: Center(
+                                        child: Text(
+                                          initials,
+                                          style: const TextStyle(
+                                              color: Colors.white),
+                                        ),
+                                      ))),
+                              Positioned(
+                                top: -18,
+                                right: -18,
+                                child: IconButton(
+                                  icon: const Icon(Icons.edit,
+                                      size: 16,
+                                      color:
+                                          Color.fromARGB(255, 139, 139, 139)),
+                                  onPressed: () {
+                                    _showEditModal(
+                                      context,
+                                      name,
+                                      '',
+                                      meetingTranscription['data'][0]['id'],
+                                      1,
+                                      meetingTranscription['data'][0]
+                                          ['raw_transcript'],
+                                    ); // Pass empty string for email for now
+                                  },
                                 ),
                               ),
-                              const SizedBox(width: 10),
-                              Text('${talkTime.toStringAsFixed(2)}%'),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              );
-            }).toList(),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              updatedName,
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: LinearProgressIndicator(
+                                    value: talkTime / 100,
+                                    color: talkTime > 50
+                                        ? Colors.green
+                                        : Colors.red,
+                                    backgroundColor: Colors.grey[300],
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Text('${talkTime.toStringAsFixed(2)}%'),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                );
+              }).toList(),
             const SizedBox(height: 20),
-            if (audioUrl != null)
-              AudioPlayerWidget(audioUrl: audioUrl!),
+            if (audioUrl != null) AudioPlayerWidget(audioUrl: audioUrl!),
           ],
         ),
       ),
