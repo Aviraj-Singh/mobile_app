@@ -143,7 +143,6 @@ class CreateMeetingPageState extends State<CreateMeetingPage> {
                 users.map((user) => user as Map<String, dynamic>).toList();
             showSuggestions = fetchedUsers.isNotEmpty;
           });
-          print('Users fetched: $fetchedUsers');
         } else {
           print('Failed to fetch users: ${response.statusCode}');
         }
@@ -174,8 +173,6 @@ class CreateMeetingPageState extends State<CreateMeetingPage> {
     setState(() {
       participantsList.add(user['id'].toString());
       selectedUsers.add(user);
-      print('This is participant list: $participantsList');
-      print('This is selected user list $selectedUsers');
       _participantsController.clear();
       fetchedUsers.clear();
       showSuggestions = false;
@@ -187,8 +184,6 @@ class CreateMeetingPageState extends State<CreateMeetingPage> {
     setState(() {
       participantsList.remove(user['id'].toString());
       selectedUsers.remove(user);
-      print('This is participant list: $participantsList');
-      print('This is selected user list $selectedUsers');
     });
   }
 

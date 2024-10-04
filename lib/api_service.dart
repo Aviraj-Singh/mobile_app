@@ -209,7 +209,7 @@ class ApiService {
     return response;
   }
 
-  Future<List<Map<String, dynamic>>> fetchMeetingData(String meetingId) async {
+  Future<List<Map<String, dynamic>>> fetchMeetingData(String meetingId, String organizationName) async {
     // List of all the API endpoints
     List<String> endpoints = [
       '/api/v1/meeting/$meetingId/',
@@ -225,6 +225,7 @@ class ApiService {
       '/api/v1/meeting/$meetingId/meeting_notes/',
       '/api/v1/meeting/$meetingId/meeting_summary/',
       '/api/v1/meeting/$meetingId/meeting_user_break_points/',
+      '/api/v1/users/?organisation=&search=&me=true',
     ];
 
     // Fetch data from all endpoints in parallel
@@ -281,5 +282,56 @@ class ApiService {
 
   return response;
 }
+
+Future<http.Response> updateActionItem(Map<String, dynamic> actionData) async {
+  String accessToken = await _getValidAccessToken(); // Ensure token is valid
+
+  final uri = Uri.parse('$baseUrl/api/v1/task/action-item/');
+  final headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer $accessToken',
+  };
+
+  final body = jsonEncode(actionData);
+
+  final response = await http.post(uri, headers: headers, body: body);
+
+  if (response.statusCode == 401) {
+    // If access token is expired, refresh and retry
+    accessToken = await refreshAccessToken();
+    final retryHeaders = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $accessToken',
+    };
+    return await http.post(uri, headers: retryHeaders, body: body);
+  }
+
+  return response;
+}
+
+Future<http.Response> deleteActionItem(int id) async {
+  String accessToken = await _getValidAccessToken(); // Ensure token is valid
+
+  final uri = Uri.parse('$baseUrl/api/v1/task/action-item/$id/');
+  final headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer $accessToken',
+  };
+
+  final response = await http.delete(uri, headers: headers);
+
+  if (response.statusCode == 401) {
+    // If access token is expired, refresh and retry
+    accessToken = await refreshAccessToken();
+    final retryHeaders = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $accessToken',
+    };
+    return await http.delete(uri, headers: retryHeaders);
+  }
+
+  return response;
+}
+
 
 }

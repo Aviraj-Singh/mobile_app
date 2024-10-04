@@ -6,6 +6,7 @@ import 'package:ultimeet_v1/talk_time.dart';
 import 'package:ultimeet_v1/meeting_details.dart';
 import 'package:ultimeet_v1/action_items.dart';
 import 'package:ultimeet_v1/meeting_overview.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 const String baseUrl = 'https://ultimeet-offline.ultimeet.io';
 
@@ -32,41 +33,48 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
 
   Future<void> fetchMeetingData() async {
     try {
-      List<Map<String, dynamic>> data =
-          await apiService.fetchMeetingData(widget.meetingId.toString());
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? accessToken = prefs.getString('ACCESS_TOKEN');
+      if (accessToken != null) {
+        Map<String, dynamic> decodedToken = JwtDecoder.decode(accessToken);
+        String organizationName = decodedToken['organization']['name'] ?? "";
+        List<Map<String, dynamic>> data =
+            await apiService.fetchMeetingData(widget.meetingId.toString(), organizationName);
 
-      // Assign response data to variables (in order)
-      if (data.length >= 13) {
-        String? audioUrlFromData = data[0]['data']["audio"];
-        String token = await _getAccessToken();
-        if (audioUrlFromData != null && token.isNotEmpty) {
-          audioUrl =
-              '$baseUrl$audioUrlFromData?key=${token.replaceAll("\"", "")}&meeting_id=${widget.meetingId.toString()}';
+        // Assign response data to variables (in order)
+        if (data.length >= 13) {
+          String? audioUrlFromData = data[0]['data']["audio"];
+          String token = await _getAccessToken();
+          if (audioUrlFromData != null && token.isNotEmpty) {
+            audioUrl =
+                '$baseUrl$audioUrlFromData?key=${token.replaceAll("\"", "")}&meeting_id=${widget.meetingId.toString()}';
+          }
+          setState(() {
+            meetingData = {
+              "meetingDetails": data[0],
+              "meetingDecision": data[1],
+              "meetingAnalytics": data[2],
+              "userBreakPoints": data[3],
+              "meetingTranscription": data[4],
+              "meetingDependency": data[5],
+              "meetingAnnouncement": data[6],
+              "actionItems": data[7],
+              "sustainableActionItems": data[8],
+              "attachments": data[9],
+              "meetingNotes": data[10],
+              "meetingSummary": data[11],
+              "additionalBreakPoints": data[12],
+              "organizationData": data[13],
+            };
+            isLoading = false;
+          });
+        } else {
+          // Handle the case where the response data is incomplete
+          print('Error: Insufficient data received from API');
+          setState(() {
+            isLoading = false;
+          });
         }
-        setState(() {
-          meetingData = {
-            "meetingDetails": data[0],
-            "meetingDecision": data[1],
-            "meetingAnalytics": data[2],
-            "userBreakPoints": data[3],
-            "meetingTranscription": data[4],
-            "meetingDependency": data[5],
-            "meetingAnnouncement": data[6],
-            "actionItems": data[7],
-            "sustainableActionItems": data[8],
-            "attachments": data[9],
-            "meetingNotes": data[10],
-            "meetingSummary": data[11],
-            "additionalBreakPoints": data[12]
-          };
-          isLoading = false;
-        });
-      } else {
-        // Handle the case where the response data is incomplete
-        print('Error: Insufficient data received from API');
-        setState(() {
-          isLoading = false;
-        });
       }
     } catch (error) {
       print('Error fetching meeting data: $error');
@@ -145,11 +153,13 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
                     const SizedBox(height: 20),
                     if (meetingData!['userBreakPoints']!['data'] != null)
                       TalkTimeWidget(
-                          userBreakPoints: meetingData!['userBreakPoints']!['data'],
-                          audioUrl: audioUrl!,
-                          meetingTranscription: meetingData!['meetingTranscription'],
-                          onUpdate: fetchMeetingData,
-                          ),
+                        userBreakPoints:
+                            meetingData!['userBreakPoints']!['data'],
+                        audioUrl: audioUrl!,
+                        meetingTranscription:
+                            meetingData!['meetingTranscription'],
+                        onUpdate: fetchMeetingData,
+                      ),
                     const SizedBox(height: 20),
                     Card(
                       elevation: 4,
@@ -157,26 +167,31 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.all(
-                            16.0),
+                        padding: const EdgeInsets.all(16.0),
                         child: SizedBox(
-                          height: MediaQuery.of(context).size.height -
-                              300,
+                          height: MediaQuery.of(context).size.height - 300,
                           child: MeetingDetailsTabs(
                             meetingDecision: meetingData!['meetingDecision'],
                             meetingSummary: meetingData!['meetingSummary'],
-                            meetingTranscription: meetingData!['meetingTranscription'],
+                            meetingTranscription:
+                                meetingData!['meetingTranscription'],
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 20),
                     ActionItemsWidget(
-                      actionItems: List<Map<String, dynamic>>.from(
-                          meetingData!["actionItems"]["data"] ?? []),
-                    ),
+                        actionItems: List<Map<String, dynamic>>.from(
+                            meetingData!["actionItems"]["data"] ?? []),
+                        organisationData: List<Map<String, dynamic>>.from(
+                            meetingData!["organizationData"]["data"] ?? []),
+                        meetingDetails: Map<String, dynamic>.from(meetingData!["meetingDetails"]["data"] ?? []),
+                        onUpdate: fetchMeetingData,
+                        ),
                     const SizedBox(height: 20),
-                    MeetingOverview(meetingAnalytics: meetingData!['meetingAnalytics']['data']),
+                    MeetingOverview(
+                        meetingAnalytics: meetingData!['meetingAnalytics']
+                            ['data']),
                   ],
                 ),
               ),
