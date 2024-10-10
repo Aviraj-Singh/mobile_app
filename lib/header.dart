@@ -151,54 +151,64 @@ class HeaderState extends State<Header> {
       toolbarHeight: 70,
       title: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            if (userDetails != null)
-              GestureDetector(
-                onTap: _toggleDropdown,
-                child: Row(
-                  children: [
-                    // Profile picture or initials placeholder
-                    CircleAvatar(
-                      radius: 16,
-                      backgroundColor:
-                          getRandomColor(getInitials(userDetails!['name'] ?? '')),
-                      child: Text(
-                        getInitials(userDetails!['name'] ?? ''),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // User name and role
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(children: [
+          Image.asset(
+            'assets/ultimeet.png',
+            height: 40,
+            width: 60,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (userDetails != null)
+                  GestureDetector(
+                    onTap: _toggleDropdown,
+                    child: Row(
                       children: [
-                        Text(
-                          userDetails!['name'] ?? 'User',
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                        // Profile picture or initials placeholder
+                        CircleAvatar(
+                          radius: 16,
+                          backgroundColor: getRandomColor(
+                              getInitials(userDetails!['name'] ?? '')),
+                          child: Text(
+                            getInitials(userDetails!['name'] ?? ''),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                        Text(
-                          userDetails!['role'] ?? 'Role',
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
-                          ),
+                        const SizedBox(width: 8),
+                        // User name and role
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              userDetails!['name'] ?? 'User',
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              userDetails!['role'] ?? 'Role',
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-          ],
-        ),
+                  ),
+              ],
+            ),
+          ),
+        ]),
       ),
     );
   }

@@ -161,11 +161,11 @@ class ApiService {
     return response;
   }
 
-  Future<http.Response> getMeetingListing(String userId, int page) async {
+  Future<http.Response> getMeetingListing(String userId, int page, String title) async {
     String accessToken = await _getValidAccessToken();
 
     final uri = Uri.parse(
-      '$baseUrl/api/v1/users/$userId/meetings/?size=12&page=$page&title=&type=&location=&date=',
+      '$baseUrl/api/v1/users/$userId/meetings/?size=12&page=$page&title=$title&type=&location=&date=',
     );
     final headers = {
       'Content-Type': 'application/json',

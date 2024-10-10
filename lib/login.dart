@@ -163,15 +163,15 @@ class LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 20),
                     // Forgot Password
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          // Handle forgot password
-                        },
-                        child: const Text('Forgot password?'),
-                      ),
-                    ),
+                    // Align(
+                    //   alignment: Alignment.centerRight,
+                    //   child: TextButton(
+                    //     onPressed: () {
+                    //       // Handle forgot password
+                    //     },
+                    //     child: const Text('Forgot password?'),
+                    //   ),
+                    // ),
                     const SizedBox(height: 30),
                     // Login Button
                     _isLoading
@@ -193,24 +193,24 @@ class LoginPageState extends State<LoginPage> {
                           ),
                     const SizedBox(height: 30),
                     // Sign Up
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text("Don't have an account? "),
-                        GestureDetector(
-                          onTap: () {
-                            // Handle sign up
-                          },
-                          child: const Text(
-                            'Sign up',
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    // Row(
+                    //   mainAxisAlignment: MainAxisAlignment.center,
+                    //   children: [
+                    //     const Text("Don't have an account? "),
+                    //     GestureDetector(
+                    //       onTap: () {
+                    //         // Handle sign up
+                    //       },
+                    //       child: const Text(
+                    //         'Sign up',
+                    //         style: TextStyle(
+                    //           color: Colors.blue,
+                    //           fontWeight: FontWeight.bold,
+                    //         ),
+                    //       ),
+                    //     ),
+                    //   ],
+                    // ),
                   ],
                 ),
               ),
