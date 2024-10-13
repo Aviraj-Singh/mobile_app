@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'api_service.dart';
 
 class ActionItemsWidget extends StatefulWidget {
@@ -263,7 +264,8 @@ class ActionItemsWidgetState extends State<ActionItemsWidget> {
                 ),
                 const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
-                  value: statusValue == 'PROGRESS' ? 'IN PROGRESS' : statusValue,
+                  value:
+                      statusValue == 'PROGRESS' ? 'IN PROGRESS' : statusValue,
                   decoration: const InputDecoration(labelText: 'Status'),
                   items: ['COMPLETED', 'PENDING', 'IN PROGRESS', 'HOLD']
                       .map((String value) {
@@ -299,28 +301,35 @@ class ActionItemsWidgetState extends State<ActionItemsWidget> {
                           "owner": widget.meetingDetails['organizer']['id'],
                           "priority": priorityValue,
                           "reporter": reporterId,
-                          "status": statusValue == 'IN PROGRESS' ? 'PROGRESS' : statusValue,
+                          "status": statusValue == 'IN PROGRESS'
+                              ? 'PROGRESS'
+                              : statusValue,
                         };
-
-                        print ('Action Data is: $actionData');
                         final response =
                             await apiService.updateActionItem(actionData);
-                        if (response.statusCode == 200 || response.statusCode == 201) {
+                        if (response.statusCode == 200 ||
+                            response.statusCode == 201) {
                           Navigator.pop(context);
                           widget.onUpdate();
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                                 content:
-                                    Text('Participant updated successfully!')),
+                                    Text('Action Item updated successfully!')),
                           );
                         } else {
                           // Handle error
+                          final errorData = jsonDecode(response.body);
+                          final errorMessage = errorData['message'];
+                          final errorCode = errorData['error_code'];
+
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                                content: Text(
-                                    'Failed to update participant: ${response.statusCode} - ${response.body}')),
+                              content: Text(
+                                  'Failed to update action item: $errorCode - $errorMessage'),
+                              backgroundColor: Colors.red,
+                              behavior: SnackBarBehavior.floating,
+                            ),
                           );
-                          print('Failed to update participant: ${response.statusCode} - ${response.body}');
                         }
                       },
                       child: const Text('Save'),
@@ -393,7 +402,8 @@ class ActionItemsWidgetState extends State<ActionItemsWidget> {
                 setState(() {
                   // Filter organisationData based on query (matches name or email)
                   fetchedUsers = widget.organisationData.where((user) {
-                    final nameLower = user['full_name'].toString().toLowerCase();
+                    final nameLower =
+                        user['full_name'].toString().toLowerCase();
                     final emailLower = user['email'].toString().toLowerCase();
                     final queryLower = query.toLowerCase();
                     return nameLower.contains(queryLower) ||

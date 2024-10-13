@@ -43,8 +43,9 @@ class LoginPageState extends State<LoginPage> {
             MaterialPageRoute(builder: (context) => const HomePage()),
           );
         } else {
+          final data = jsonDecode(response.body);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Login Failed: ${response.body}')),
+            SnackBar(content: Text('Login Failed: ${data['message']}')),
           );
         }
       } catch (error) {

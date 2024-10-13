@@ -340,6 +340,12 @@ class CreateMeetingPageState extends State<CreateMeetingPage> {
             context,
             MaterialPageRoute(builder: (context) => const HomePage()),
           );
+          Fluttertoast.showToast(
+              msg: 'Meeting created successfully.',
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              backgroundColor: Colors.green,
+              textColor: Colors.white);
         } else {
           // Show toaster with error message
           Fluttertoast.showToast(
