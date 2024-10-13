@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'api_service.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class ActionItemsWidget extends StatefulWidget {
   final List<Map<String, dynamic>> actionItems;
@@ -322,14 +323,21 @@ class ActionItemsWidgetState extends State<ActionItemsWidget> {
                           final errorMessage = errorData['message'];
                           final errorCode = errorData['error_code'];
 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                  'Failed to update action item: $errorCode - $errorMessage'),
+                          Fluttertoast.showToast(
+                              msg: 'Failed to update action item - $errorMessage',
+                              toastLength: Toast.LENGTH_SHORT,
+                              gravity: ToastGravity.BOTTOM,
                               backgroundColor: Colors.red,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
+                              textColor: Colors.white);
+
+                          // ScaffoldMessenger.of(context).showSnackBar(
+                          //   SnackBar(
+                          //     content: Text(
+                          //         'Failed to update action item: $errorCode - $errorMessage'),
+                          //     backgroundColor: Colors.red,
+                          //     behavior: SnackBarBehavior.floating,
+                          //   ),
+                          // );
                         }
                       },
                       child: const Text('Save'),
