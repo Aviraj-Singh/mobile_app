@@ -242,7 +242,7 @@ class TalkTimeWidget extends StatelessWidget {
                 );
               }).toList(),
             const SizedBox(height: 20),
-            if (audioUrl != null) AudioPlayerWidget(audioUrl: audioUrl!),
+            if (audioUrl != null) AudioPlayerWidget(audioUrl: audioUrl!, userBreakPoints: userBreakPoints,),
           ],
         ),
       ),

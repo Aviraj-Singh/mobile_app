@@ -208,6 +208,11 @@ class MeetingListingPageState extends State<MeetingListingPage> {
         borderColor = Colors.grey; // Default border color if no type matches
     }
 
+    String title = meeting['title'] != null ? utf8.decode(meeting['title'].runes.toList()) : 'No Title';
+    if (title.length > 100) {
+      title = '${title.substring(0, 100)}...'; // Limit to 100 characters
+    }
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -230,7 +235,7 @@ class MeetingListingPageState extends State<MeetingListingPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  meeting['title'] ?? 'No Title',
+                  title,
                   style: const TextStyle(
                       fontSize: 18, fontWeight: FontWeight.bold),
                 ),

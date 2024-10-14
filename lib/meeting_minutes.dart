@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'dart:math';
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ultimeet_v1/talk_time.dart';
 import 'package:ultimeet_v1/meeting_details.dart';
@@ -132,11 +133,17 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
 
   @override
   Widget build(BuildContext context) {
+    String title = meetingData != null
+      ? meetingData!['meetingDetails']!['data']!["title"] ?? 'Meeting'
+      : 'Meeting ID: ${widget.meetingId}';
+
+    title = utf8.decode(title.runes.toList());
+    if (title.length > 100) {
+      title = '${title.substring(0, 100)}...'; // Limit to 100 characters
+    }
     return Scaffold(
       appBar: AppBar(
-        title: Text(meetingData != null
-            ? meetingData!['meetingDetails']!['data']!["title"] ?? 'Meeting'
-            : 'Meeting ID: ${widget.meetingId}'),
+        title: Text(title),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -234,13 +241,19 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
   }
 
   Widget _buildMeetingDetails() {
+    String title = meetingData != null
+      ? meetingData!['meetingDetails']!['data']!["title"] ?? 'Meeting'
+      : 'Meeting ID: ${widget.meetingId}';
+
+    title = utf8.decode(title.runes.toList());
+    if (title.length > 100) {
+      title = '${title.substring(0, 100)}...'; // Limit to 100 characters
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-            meetingData != null
-                ? meetingData!['meetingDetails']!['data']!["title"] ?? 'Meeting'
-                : 'Meeting ID: ${widget.meetingId}',
+            title,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         const SizedBox(height: 20),
         Text('# ${widget.meetingId}'),

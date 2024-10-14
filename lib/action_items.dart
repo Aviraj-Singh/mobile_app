@@ -321,7 +321,7 @@ class ActionItemsWidgetState extends State<ActionItemsWidget> {
                           // Handle error
                           final errorData = jsonDecode(response.body);
                           final errorMessage = errorData['message'];
-                          final errorCode = errorData['error_code'];
+                          //final errorCode = errorData['error_code'];
 
                           Fluttertoast.showToast(
                               msg: 'Failed to update action item - $errorMessage',
@@ -428,7 +428,7 @@ class ActionItemsWidgetState extends State<ActionItemsWidget> {
             SizedBox(
               height: 200, // Set a fixed height for the suggestion box
               child: ListView.builder(
-                itemCount: fetchedUsers.length > 5 ? 5 : fetchedUsers.length,
+                itemCount: fetchedUsers.length > 3 ? 3 : fetchedUsers.length,
                 itemBuilder: (context, index) {
                   final user = fetchedUsers[index];
                   return ListTile(
