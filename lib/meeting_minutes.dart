@@ -39,8 +39,8 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
       if (accessToken != null) {
         Map<String, dynamic> decodedToken = JwtDecoder.decode(accessToken);
         String organizationName = decodedToken['organization']['name'] ?? "";
-        List<Map<String, dynamic>> data =
-            await apiService.fetchMeetingData(widget.meetingId.toString(), organizationName);
+        List<Map<String, dynamic>> data = await apiService.fetchMeetingData(
+            widget.meetingId.toString(), organizationName);
 
         // Assign response data to variables (in order)
         if (data.length >= 13) {
@@ -134,8 +134,8 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
   @override
   Widget build(BuildContext context) {
     String title = meetingData != null
-      ? meetingData!['meetingDetails']!['data']!["title"] ?? 'Meeting'
-      : 'Meeting ID: ${widget.meetingId}';
+        ? meetingData!['meetingDetails']!['data']!["title"] ?? 'Meeting'
+        : 'Meeting ID: ${widget.meetingId}';
 
     title = utf8.decode(title.runes.toList());
     if (title.length > 100) {
@@ -188,13 +188,14 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
                     ),
                     const SizedBox(height: 20),
                     ActionItemsWidget(
-                        actionItems: List<Map<String, dynamic>>.from(
-                            meetingData!["actionItems"]["data"] ?? []),
-                        organisationData: List<Map<String, dynamic>>.from(
-                            meetingData!["organizationData"]["data"] ?? []),
-                        meetingDetails: Map<String, dynamic>.from(meetingData!["meetingDetails"]["data"] ?? []),
-                        onUpdate: fetchMeetingData,
-                        ),
+                      actionItems: List<Map<String, dynamic>>.from(
+                          meetingData!["actionItems"]["data"] ?? []),
+                      organisationData: List<Map<String, dynamic>>.from(
+                          meetingData!["organizationData"]["data"] ?? []),
+                      meetingDetails: Map<String, dynamic>.from(
+                          meetingData!["meetingDetails"]["data"] ?? []),
+                      onUpdate: fetchMeetingData,
+                    ),
                     const SizedBox(height: 20),
                     MeetingOverview(
                         meetingAnalytics: meetingData!['meetingAnalytics']
@@ -242,8 +243,8 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
 
   Widget _buildMeetingDetails() {
     String title = meetingData != null
-      ? meetingData!['meetingDetails']!['data']!["title"] ?? 'Meeting'
-      : 'Meeting ID: ${widget.meetingId}';
+        ? meetingData!['meetingDetails']!['data']!["title"] ?? 'Meeting'
+        : 'Meeting ID: ${widget.meetingId}';
 
     title = utf8.decode(title.runes.toList());
     if (title.length > 100) {
@@ -252,8 +253,7 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-            title,
+        Text(title,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         const SizedBox(height: 20),
         Text('# ${widget.meetingId}'),
@@ -415,6 +415,8 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
     var organizer = meetingData?['meetingDetails']?['data']?["organizer"] ?? {};
     final String initials = getInitials(organizer['full_name']);
     final Color avatarColor = getRandomColor();
+    String organizerFullName = organizer["full_name"] ?? "";
+    String organizerFirstName = organizerFullName.split(' ').first;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -438,7 +440,7 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  organizer["full_name"] ?? "N/A",
+                  organizerFirstName,
                   style: const TextStyle(fontSize: 16),
                 ),
                 // Text(

@@ -3,7 +3,7 @@ import 'package:ultimeet_v1/audio_player.dart';
 import 'api_service.dart';
 import 'dart:convert';
 
-class TalkTimeWidget extends StatelessWidget {
+class TalkTimeWidget extends StatefulWidget {
   final List<dynamic> userBreakPoints;
   final String? audioUrl;
   final Map<String, dynamic> meetingTranscription;
@@ -16,6 +16,13 @@ class TalkTimeWidget extends StatelessWidget {
     required this.meetingTranscription,
     required this.onUpdate,
   });
+
+  @override
+  TalkTimeWidgetState createState() => TalkTimeWidgetState();
+}
+
+class TalkTimeWidgetState extends State<TalkTimeWidget> {
+  String? selectedSpeaker;
 
   Color getColorForUser(String name) {
     int hash = name.hashCode;
@@ -100,7 +107,7 @@ class TalkTimeWidget extends StatelessWidget {
 
                   if (response.statusCode == 200) {
                     // Success
-                    onUpdate();
+                    widget.onUpdate();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                           content: Text('Participant updated successfully!')),
@@ -112,7 +119,8 @@ class TalkTimeWidget extends StatelessWidget {
                           content: Text(
                               'Failed to update participant: ${response.statusCode}')),
                     );
-                    print('Failed to update participant: ${response.statusCode}');
+                    print(
+                        'Failed to update participant: ${response.statusCode}');
                   }
                 } catch (e) {
                   print(e);
@@ -148,7 +156,7 @@ class TalkTimeWidget extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            if (userBreakPoints.isEmpty)
+            if (widget.userBreakPoints.isEmpty)
               const Padding(
                 padding: EdgeInsets.only(left: 2.0),
                 child: Text(
@@ -157,7 +165,7 @@ class TalkTimeWidget extends StatelessWidget {
                 ),
               )
             else
-              ...userBreakPoints.map((user) {
+              ...widget.userBreakPoints.map((user) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children:
@@ -172,43 +180,50 @@ class TalkTimeWidget extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: Row(
                         children: [
-                          Stack(
-                            //clipBehavior: Clip.none, // This allows the pencil icon to appear outside the avatar
-                            children: [
-                              ClipOval(
-                                  child: Container(
-                                      color: avatarColor,
-                                      width: 40.0,
-                                      height: 40.0,
-                                      child: Center(
-                                        child: Text(
-                                          initials,
-                                          style: const TextStyle(
-                                              color: Colors.white),
-                                        ),
-                                      ))),
-                              Positioned(
-                                top: -18,
-                                right: -18,
-                                child: IconButton(
-                                  icon: const Icon(Icons.edit,
-                                      size: 16,
-                                      color:
-                                          Color.fromARGB(255, 139, 139, 139)),
-                                  onPressed: () {
-                                    _showEditModal(
-                                      context,
-                                      name,
-                                      '',
-                                      meetingTranscription['data'][0]['id'],
-                                      1,
-                                      meetingTranscription['data'][0]
-                                          ['raw_transcript'],
-                                    ); // Pass empty string for email for now
-                                  },
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selectedSpeaker = name;
+                              });
+                            },
+                            child: Stack(
+                              children: [
+                                ClipOval(
+                                    child: Container(
+                                        color: avatarColor,
+                                        width: 40.0,
+                                        height: 40.0,
+                                        child: Center(
+                                          child: Text(
+                                            initials,
+                                            style: const TextStyle(
+                                                color: Colors.white),
+                                          ),
+                                        ))),
+                                Positioned(
+                                  top: -18,
+                                  right: -18,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.edit,
+                                        size: 16,
+                                        color:
+                                            Color.fromARGB(255, 139, 139, 139)),
+                                    onPressed: () {
+                                      _showEditModal(
+                                        context,
+                                        name,
+                                        '',
+                                        widget.meetingTranscription['data'][0]
+                                            ['id'],
+                                        1,
+                                        widget.meetingTranscription['data'][0]
+                                            ['raw_transcript'],
+                                      );
+                                    },
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
@@ -242,7 +257,12 @@ class TalkTimeWidget extends StatelessWidget {
                 );
               }).toList(),
             const SizedBox(height: 20),
-            if (audioUrl != null) AudioPlayerWidget(audioUrl: audioUrl!, userBreakPoints: userBreakPoints,),
+            if (widget.audioUrl != null)
+              AudioPlayerWidget(
+                audioUrl: widget.audioUrl!,
+                userBreakPoints: widget.userBreakPoints,
+                selectedSpeaker: selectedSpeaker ?? '',
+              ),
           ],
         ),
       ),

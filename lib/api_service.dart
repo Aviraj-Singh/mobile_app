@@ -1,5 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
+import 'package:mime/mime.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
@@ -161,7 +165,8 @@ class ApiService {
     return response;
   }
 
-  Future<http.Response> getMeetingListing(String userId, int page, String title) async {
+  Future<http.Response> getMeetingListing(
+      String userId, int page, String title) async {
     String accessToken = await _getValidAccessToken();
 
     final uri = Uri.parse(
@@ -209,7 +214,8 @@ class ApiService {
     return response;
   }
 
-  Future<List<Map<String, dynamic>>> fetchMeetingData(String meetingId, String organizationName) async {
+  Future<List<Map<String, dynamic>>> fetchMeetingData(
+      String meetingId, String organizationName) async {
     // List of all the API endpoints
     List<String> endpoints = [
       '/api/v1/meeting/$meetingId/',
@@ -229,109 +235,295 @@ class ApiService {
     ];
 
     // Fetch data from all endpoints in parallel
-    List<Future<http.Response>> futures = endpoints.map((endpoint) => _getApiData(endpoint)).toList();
+    List<Future<http.Response>> futures =
+        endpoints.map((endpoint) => _getApiData(endpoint)).toList();
 
     List<http.Response> responses = await Future.wait(futures);
 
     List<Map<String, dynamic>> decodedResponses = [];
 
-  for (var response in responses) {
-    if (response.statusCode == 200) {
-      try {
-        // Try parsing the JSON response
-        final decoded = jsonDecode(response.body);
-        decodedResponses.add(decoded as Map<String, dynamic>);
-      } catch (e) {
-        print('Error parsing JSON for endpoint: ${response.request?.url}');
+    for (var response in responses) {
+      if (response.statusCode == 200) {
+        try {
+          // Try parsing the JSON response
+          final decoded = jsonDecode(response.body);
+          decodedResponses.add(decoded as Map<String, dynamic>);
+        } catch (e) {
+          print('Error parsing JSON for endpoint: ${response.request?.url}');
+          print('Response body: ${response.body}');
+        }
+      } else {
+        print('Error: ${response.statusCode} from ${response.request?.url}');
         print('Response body: ${response.body}');
       }
-    } else {
-      print('Error: ${response.statusCode} from ${response.request?.url}');
-      print('Response body: ${response.body}');
     }
-  }
 
     return decodedResponses;
   }
 
-  Future<http.Response> updateTranscriptUser(int id, String email, String name, int organisation, List<dynamic> rawTranscriptArray) async {
-  String accessToken = await _getValidAccessToken();
+  Future<http.Response> updateTranscriptUser(int id, String email, String name,
+      int organisation, List<dynamic> rawTranscriptArray) async {
+    String accessToken = await _getValidAccessToken();
 
-  final uri = Uri.parse('$baseUrl/api/v1/edit/transcript-user/?id=$id&email=$email&organisation=$organisation');
-  final headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer $accessToken',
-  };
-
-  final body = jsonEncode({
-    'raw_transcript': rawTranscriptArray,
-  });
-
-  print('Body is: $body');
-
-  final response = await http.patch(uri, headers: headers, body: body);
-
-  if (response.statusCode == 401) {
-    accessToken = await refreshAccessToken();
-    final retryHeaders = {
+    final uri = Uri.parse(
+        '$baseUrl/api/v1/edit/transcript-user/?id=$id&email=$email&organisation=$organisation');
+    final headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $accessToken',
     };
-    return await http.post(uri, headers: retryHeaders, body: body);
+
+    final body = jsonEncode({
+      'raw_transcript': rawTranscriptArray,
+    });
+
+    print('Body is: $body');
+
+    final response = await http.patch(uri, headers: headers, body: body);
+
+    if (response.statusCode == 401) {
+      accessToken = await refreshAccessToken();
+      final retryHeaders = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      };
+      return await http.post(uri, headers: retryHeaders, body: body);
+    }
+
+    return response;
   }
 
-  return response;
-}
+  Future<http.Response> updateActionItem(
+      Map<String, dynamic> actionData) async {
+    String accessToken = await _getValidAccessToken(); // Ensure token is valid
 
-Future<http.Response> updateActionItem(Map<String, dynamic> actionData) async {
-  String accessToken = await _getValidAccessToken(); // Ensure token is valid
-
-  final uri = Uri.parse('$baseUrl/api/v1/task/action-item/');
-  final headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer $accessToken',
-  };
-
-  final body = jsonEncode(actionData);
-
-  final response = await http.post(uri, headers: headers, body: body);
-
-  if (response.statusCode == 401) {
-    // If access token is expired, refresh and retry
-    accessToken = await refreshAccessToken();
-    final retryHeaders = {
+    final uri = Uri.parse('$baseUrl/api/v1/task/action-item/');
+    final headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $accessToken',
     };
-    return await http.post(uri, headers: retryHeaders, body: body);
+
+    final body = jsonEncode(actionData);
+
+    final response = await http.post(uri, headers: headers, body: body);
+
+    if (response.statusCode == 401) {
+      // If access token is expired, refresh and retry
+      accessToken = await refreshAccessToken();
+      final retryHeaders = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      };
+      return await http.post(uri, headers: retryHeaders, body: body);
+    }
+
+    return response;
   }
 
-  return response;
-}
+  Future<http.Response> deleteActionItem(int id) async {
+    String accessToken = await _getValidAccessToken(); // Ensure token is valid
 
-Future<http.Response> deleteActionItem(int id) async {
-  String accessToken = await _getValidAccessToken(); // Ensure token is valid
-
-  final uri = Uri.parse('$baseUrl/api/v1/task/action-item/$id/');
-  final headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer $accessToken',
-  };
-
-  final response = await http.delete(uri, headers: headers);
-
-  if (response.statusCode == 401) {
-    // If access token is expired, refresh and retry
-    accessToken = await refreshAccessToken();
-    final retryHeaders = {
+    final uri = Uri.parse('$baseUrl/api/v1/task/action-item/$id/');
+    final headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $accessToken',
     };
-    return await http.delete(uri, headers: retryHeaders);
+
+    final response = await http.delete(uri, headers: headers);
+
+    if (response.statusCode == 401) {
+      // If access token is expired, refresh and retry
+      accessToken = await refreshAccessToken();
+      final retryHeaders = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      };
+      return await http.delete(uri, headers: retryHeaders);
+    }
+
+    return response;
   }
 
-  return response;
-}
+  Future<http.Response> uploadMedia({
+    required String meetingID,
+    required File mediaFile,
+    required String startTime,
+    required String endTime,
+    required List<String> participantsList,
+    required bool isSafariBrowser,
+  }) async {
+    String accessToken = await _getValidAccessToken();
+    final uri = Uri.parse(
+        '$baseUrl/api/v1/meeting/$meetingID/media${isSafariBrowser ? "?browser=SAFARI" : ""}');
 
+    // Guess the media file's MIME type
+    final mimeTypeData =
+        lookupMimeType(mediaFile.path)?.split('/') ?? ['audio', 'wav'];
 
+    Uint8List fileBytes = await mediaFile.readAsBytes();
+    var request = http.MultipartRequest('PATCH', uri)
+      ..headers['Authorization'] = 'Bearer $accessToken'
+      ..headers['Content-Type'] = 'multipart/form-data'
+      ..fields['start_time'] = startTime
+      ..fields['end_time'] = endTime;
+
+    for (String participantID in participantsList) {
+      request.fields['participants_list'] = participantID;
+    }
+
+    request.files.add(http.MultipartFile.fromBytes(
+      'audio',
+      fileBytes,
+      filename: mediaFile.path.split('/').last,
+      contentType: MediaType(mimeTypeData[0], mimeTypeData[1]),
+    ));
+
+    final response = await request.send();
+    return await http.Response.fromStream(response);
+  }
+
+  Future<http.StreamedResponse> uploadAudio({
+    required String meetingId,
+    required String uploadedFilePath,
+    required String recordedAudioPath,
+    required List<String> selectedUserIds,
+  }) async {
+    // Get access token
+    String accessToken = await _getValidAccessToken();
+
+    // Set headers
+    final headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    print("headers: $headers");
+
+    // Create a MultipartFile using the audio path (either uploaded or recorded)
+    final audioFile = await http.MultipartFile.fromPath(
+      'audio',
+      uploadedFilePath.isNotEmpty ? uploadedFilePath : recordedAudioPath,
+    );
+
+    // Create a MultipartRequest
+    final request = http.MultipartRequest(
+      'PATCH',
+      Uri.parse('$baseUrl/api/v1/meeting/$meetingId/media/'),
+    );
+
+    print('url: $baseUrl/api/v1/meeting/$meetingId/media/');
+
+    // Add headers to the request
+    request.headers.addAll(headers);
+
+    // Add other fields (start_time, end_time, participants_list)
+    request.fields.addAll({
+      'start_time': DateTime.now().toString().substring(11, 16),
+      'end_time': DateTime.now()
+          .add(const Duration(minutes: 10))
+          .toString()
+          .substring(11, 16),
+      'participants_list': selectedUserIds.join(','),
+    });
+
+    // Attach the audio file to the request
+    request.files.add(audioFile);
+
+    // Send the request
+    final response = await request.send();
+
+    print('response of uploadAudio(): ${response.statusCode}');
+
+    // Handle success and retry logic if necessary
+    if (response.statusCode == 401) {
+      accessToken = await refreshAccessToken();
+      request.headers['Authorization'] = 'Bearer $accessToken';
+
+      final retryResponse = await request.send();
+      return retryResponse;
+    }
+
+    return response;
+  }
+
+  Future<http.Response> getAudioProcessing(
+    String meetingID,
+  ) async {
+    String accessToken = await _getValidAccessToken();
+
+    final uri = Uri.parse(
+        'https://ultimeet-transcript.ultimeet.io/api/v1/generate_transcript/?meeting_id=$meetingID');
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $accessToken',
+    };
+
+    final response = await http.get(uri, headers: headers);
+
+    if (response.statusCode == 401) {
+      // If access token is expired, refresh and retry
+      accessToken = await refreshAccessToken();
+      final retryHeaders = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      };
+      return await http.get(uri, headers: retryHeaders);
+    }
+
+    return response;
+  }
+
+  Future<http.Response> deleteMeeting(String id) async {
+    String accessToken = await _getValidAccessToken(); // Ensure token is valid
+
+    final uri = Uri.parse('$baseUrl/api/v1/meeting/$id/');
+    //https://ultimeet-offline.ultimeet.io/api/v1/meeting/36433/
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $accessToken',
+    };
+
+    final response = await http.delete(uri, headers: headers);
+
+    if (response.statusCode == 401) {
+      // If access token is expired, refresh and retry
+      accessToken = await refreshAccessToken();
+      final retryHeaders = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      };
+      return await http.delete(uri, headers: retryHeaders);
+    }
+
+    return response;
+  }
+
+  Future<http.Response> addParticipantsInMeeting(
+      Map<String, dynamic> data) async {
+    String accessToken = await _getValidAccessToken(); 
+
+    final uri = Uri.parse('$baseUrl/api/v1/meeting-participants/');
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $accessToken',
+    };
+
+    final response =
+        await http.post(uri, headers: headers, body: jsonEncode(data));
+
+    if (response.statusCode == 401) {
+      // If access token is expired, refresh and retry
+      accessToken = await refreshAccessToken();
+      final retryHeaders = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      };
+      return await http.post(uri,
+          headers: retryHeaders, body: jsonEncode(data));
+    }
+    print(response.body);
+    print(response.statusCode);
+
+    return response;
+  }
 }

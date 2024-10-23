@@ -3,10 +3,15 @@ import 'package:just_audio/just_audio.dart';
 
 class AudioPlayerWidget extends StatefulWidget {
   final String audioUrl;
-  final List<dynamic> userBreakPoints; // Pass the user breakpoints
+  final List<dynamic> userBreakPoints;
+  final String selectedSpeaker;
 
-  const AudioPlayerWidget(
-      {super.key, required this.audioUrl, required this.userBreakPoints});
+  const AudioPlayerWidget({
+    super.key,
+    required this.audioUrl,
+    required this.userBreakPoints,
+    required this.selectedSpeaker,
+  });
 
   @override
   AudioPlayerWidgetState createState() => AudioPlayerWidgetState();
@@ -69,38 +74,40 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
         List<dynamic> userBreakPointTexts = user['user_break_point_text'];
 
         for (var userBreakPoint in userBreakPointTexts) {
-          String userName = userBreakPoint['name'];
-          Color avatarColor = _getColorForUser(userName);
+          if (userBreakPoint['name'] == widget.selectedSpeaker) {
+            String userName = userBreakPoint['name'];
+            Color avatarColor = _getColorForUser(userName);
 
-          List<dynamic> starts = userBreakPoint['start'];
+            List<dynamic> starts = userBreakPoint['start'];
 
-          for (var start in starts) {
-            if (start is double) {
-              double positionPercent =
-                  start.toDouble() / totalDuration.inMilliseconds.toDouble();
+            for (var start in starts) {
+              if (start is double) {
+                double positionPercent =
+                    start.toDouble() / totalDuration.inMilliseconds.toDouble();
 
-              markers.add(Align(
-                alignment: Alignment(
-                    (2 * positionPercent) - 1, 0), // Align marker horizontally
-                child: GestureDetector(
-                  onTap: () {
-                    // Move the audio to this position when marker is tapped
-                    _audioPlayer.seek(
-                        Duration(milliseconds: start.toInt()));
-                  },
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: avatarColor,
+                markers.add(Align(
+                  alignment: Alignment((2 * positionPercent) - 1,
+                      0), // Align marker horizontally
+                  child: GestureDetector(
+                    onTap: () {
+                      // Move the audio to this position when marker is tapped
+                      _audioPlayer.seek(Duration(milliseconds: start.toInt()));
+                    },
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: avatarColor,
+                      ),
                     ),
                   ),
-                ),
-              ));
-            } else {
-              // Handle the case where start is not a double
-              print('Warning: start value is not a double: ${start.runtimeType}');
+                ));
+              } else {
+                // Handle the case where start is not a double
+                print(
+                    'Warning: start value is not a double: ${start.runtimeType}');
+              }
             }
           }
         }
