@@ -23,6 +23,7 @@ class _DashboardPageState extends State<DashboardPage> {
   String? organization;
   String? organizationName;
   String? department;
+  bool isAdding = false;
   final _meetingLinkController = TextEditingController();
 
   @override
@@ -129,6 +130,11 @@ class _DashboardPageState extends State<DashboardPage> {
       return;
     }
 
+    if (isAdding) return;
+    setState(() {
+      isAdding = true;
+    });
+
     DateTime currentTime = DateTime.now();
     final meetingData = {
       'meeting_link': meetingLink,
@@ -171,6 +177,8 @@ class _DashboardPageState extends State<DashboardPage> {
           backgroundColor: Colors.red,
           textColor: Colors.white,
         );
+        _meetingLinkController.clear();
+        FocusScope.of(context).unfocus();
       }
     } catch (e) {
       print('Error creating meeting: $e');
@@ -181,6 +189,11 @@ class _DashboardPageState extends State<DashboardPage> {
         backgroundColor: Colors.red,
         textColor: Colors.white,
       );
+    } finally {
+      // Re-enable the button after response/error
+      setState(() {
+        isAdding = false;
+      });
     }
   }
 
@@ -190,15 +203,18 @@ class _DashboardPageState extends State<DashboardPage> {
       'organizer': organizer,
       'organization': organization,
       'department': department,
-      'title': '$userName\'s meeting on ${DateFormat('yyyy-MM-dd HH:mm:ss').format(currentTime)} (UTC)',
+      'title':
+          '$userName\'s meeting on ${DateFormat('yyyy-MM-dd HH:mm:ss').format(currentTime)} (UTC)',
       'schedule_date': DateFormat('yyyy-MM-dd').format(currentTime),
       'schedule_time': _convertTimeToUTC(currentTime),
       'start_time': _convertTimeToUTC(currentTime),
       'type': 'Instant',
-      'description': '$userName\'s meeting on ${DateFormat('yyyy-MM-dd HH:mm:ss').format(currentTime)} (UTC)',
+      'description':
+          '$userName\'s meeting on ${DateFormat('yyyy-MM-dd HH:mm:ss').format(currentTime)} (UTC)',
       'location': 'Offline',
       'duration': '10',
-      'end_time': _convertTimeToUTC(currentTime.add(const Duration(minutes: 10))),
+      'end_time':
+          _convertTimeToUTC(currentTime.add(const Duration(minutes: 10))),
     };
 
     try {
@@ -275,8 +291,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           actions: [
             Padding(
-              padding:
-                  const EdgeInsets.only(right: 8.0),
+              padding: const EdgeInsets.only(right: 8.0),
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
@@ -289,8 +304,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 onPressed: _createInstantMeeting,
                 child: const Text(
                   "Instant Meeting",
-                  style: TextStyle(
-                      color: Colors.white, fontSize: 16),
+                  style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
             ),
@@ -336,7 +350,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton(
-                          onPressed: _createMeeting,
+                          onPressed: isAdding ? null : _createMeeting,
                           child: const Text('Add'),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
@@ -366,7 +380,8 @@ class _DashboardPageState extends State<DashboardPage> {
                           itemBuilder: (context, index) {
                             final meeting = meetings[index];
                             final participants = meeting['participant_list'];
-                            final Color cardBorderColor = getMeetingTypeColor(meeting['type']);
+                            final Color cardBorderColor =
+                                getMeetingTypeColor(meeting['type']);
 
                             return GestureDetector(
                               onTap: () {
@@ -378,7 +393,8 @@ class _DashboardPageState extends State<DashboardPage> {
                                 margin: const EdgeInsets.all(8.0),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8.0),
-                                  side: BorderSide(color: cardBorderColor, width: 2.0),
+                                  side: BorderSide(
+                                      color: cardBorderColor, width: 2.0),
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
@@ -401,8 +417,8 @@ class _DashboardPageState extends State<DashboardPage> {
                                       const SizedBox(height: 8),
                                       Text(
                                         '${meeting['schedule_time']} - ${meeting['end_time']}',
-                                        style:
-                                            const TextStyle(color: Colors.black),
+                                        style: const TextStyle(
+                                            color: Colors.black),
                                       ),
                                       const SizedBox(height: 8),
                                       Row(

@@ -319,6 +319,32 @@ class ApiService {
     return response;
   }
 
+  Future<http.StreamedResponse> editActionItem(
+      Map<String, dynamic> actionData, String itemId) async {
+    String accessToken = await _getValidAccessToken(); // Ensure token is valid
+
+    final uri = Uri.parse('$baseUrl/api/v1/task/action-item/$itemId/');
+
+    final request = http.MultipartRequest('PATCH', uri);
+    request.headers['Authorization'] = 'Bearer $accessToken';
+
+    // Add each field in actionData to the multipart request
+    actionData.forEach((key, value) {
+      request.fields[key] = value.toString();
+    });
+
+    final response = await request.send();
+
+    if (response.statusCode == 401) {
+      // If access token is expired, refresh and retry
+      accessToken = await refreshAccessToken();
+      request.headers['Authorization'] = 'Bearer $accessToken';
+      return await request.send();
+    }
+
+    return response;
+  }
+
   Future<http.Response> deleteActionItem(int id) async {
     String accessToken = await _getValidAccessToken(); // Ensure token is valid
 
@@ -500,7 +526,7 @@ class ApiService {
 
   Future<http.Response> addParticipantsInMeeting(
       Map<String, dynamic> data) async {
-    String accessToken = await _getValidAccessToken(); 
+    String accessToken = await _getValidAccessToken();
 
     final uri = Uri.parse('$baseUrl/api/v1/meeting-participants/');
     final headers = {

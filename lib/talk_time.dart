@@ -186,50 +186,48 @@ class TalkTimeWidgetState extends State<TalkTimeWidget> {
                                 selectedSpeaker = name;
                               });
                             },
-                            child: Stack(
-                              children: [
-                                ClipOval(
-                                    child: Container(
-                                        color: avatarColor,
-                                        width: 40.0,
-                                        height: 40.0,
-                                        child: Center(
-                                          child: Text(
-                                            initials,
-                                            style: const TextStyle(
-                                                color: Colors.white),
-                                          ),
-                                        ))),
-                                Positioned(
-                                  top: -18,
-                                  right: -18,
-                                  child: IconButton(
-                                    icon: const Icon(Icons.edit,
-                                        size: 16,
-                                        color:
-                                            Color.fromARGB(255, 139, 139, 139)),
-                                    onPressed: () {
-                                      _showEditModal(
-                                        context,
-                                        name,
-                                        '',
-                                        widget.meetingTranscription['data'][0]
-                                            ['id'],
-                                        1,
-                                        widget.meetingTranscription['data'][0]
-                                            ['raw_transcript'],
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
+                            child: ClipOval(
+                                child: Container(
+                                    color: avatarColor,
+                                    width: 40.0,
+                                    height: 40.0,
+                                    child: Center(
+                                      child: Text(
+                                        initials,
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                    ))),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
-                            child: Text(
-                              updatedName,
-                              style: const TextStyle(fontSize: 16),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    updatedName,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.edit,
+                                      size: 20,
+                                      color:
+                                          Color.fromARGB(255, 139, 139, 139)),
+                                  onPressed: () {
+                                    _showEditModal(
+                                      context,
+                                      name,
+                                      '',
+                                      widget.meetingTranscription['data'][0]
+                                          ['id'],
+                                      1,
+                                      widget.meetingTranscription['data'][0]
+                                          ['raw_transcript'],
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(width: 10),

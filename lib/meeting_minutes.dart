@@ -351,16 +351,57 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
     final String initials = getInitials(participant['name']);
     final Color avatarColor = getRandomColor();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      child: CircleAvatar(
-        radius: 20,
-        backgroundColor: avatarColor,
-        child: Text(
-          initials,
-          style: const TextStyle(color: Colors.white),
+    return GestureDetector(
+      onTap: () => _showIndividualDetails(participant),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        child: CircleAvatar(
+          radius: 20,
+          backgroundColor: avatarColor,
+          child: Text(
+            initials,
+            style: const TextStyle(color: Colors.white),
+          ),
         ),
       ),
+    );
+  }
+
+  void _showIndividualDetails(Map<String, dynamic> participant) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Participant Details',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                ListTile(
+                  leading: CircleAvatar(
+                    radius: 20,
+                    backgroundColor: getRandomColor(),
+                    child: Text(
+                      getInitials(participant['name']),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  title: Text(participant['name']),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

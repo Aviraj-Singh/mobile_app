@@ -65,6 +65,7 @@ class _InstantMeetingModalState extends State<InstantMeetingModal> {
   final stopwatch = Stopwatch();
   Timer? _timer;
   String timePassed = '';
+  String finalDuration = '';
 
   @override
   void initState() {
@@ -310,6 +311,7 @@ class _InstantMeetingModalState extends State<InstantMeetingModal> {
         isRecording = false;
         processing = true;
       });
+      finalDuration = formatTime(timePassed);
       stopwatch.stop();
       stopwatch.reset();
       String? path = await recorder.stop();
@@ -421,6 +423,17 @@ class _InstantMeetingModalState extends State<InstantMeetingModal> {
     }
   }
 
+  String formatTime(String seconds) {
+    if (seconds.isEmpty) {
+      return '00:00:00';
+    }
+    int sec = int.parse(seconds);
+    int hours = sec ~/ 3600;
+    int minutes = (sec ~/ 60) % 60;
+    sec = sec % 60;
+    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -476,6 +489,10 @@ class _InstantMeetingModalState extends State<InstantMeetingModal> {
                       ),
                     ),
                     const SizedBox(width: 16),
+                    Text(
+                      isRecording ? formatTime(timePassed) : '',
+                      style: const TextStyle(fontSize: 16),
+                    ),
                     if (isRecording && !recorderPaused)
                       ElevatedButton.icon(
                         onPressed: pauseRecording,
@@ -499,15 +516,6 @@ class _InstantMeetingModalState extends State<InstantMeetingModal> {
                   label: const Text("Upload Audio File"),
                 ),
                 const SizedBox(height: 16),
-                // if (audioFile != null)
-                //   Column(
-                //     children: [
-                //       Text(
-                //           "Recorded/Selected Audio: ${audioFile?.path.split('/').last}"),
-                //       const SizedBox(height: 8),
-                //     ],
-                //   ),
-
                 if (processing &&
                     (uploadedFilePath.isNotEmpty ||
                         recordedAudioPath.isNotEmpty))
@@ -518,21 +526,31 @@ class _InstantMeetingModalState extends State<InstantMeetingModal> {
                             ? 'Selected File: ${uploadedFilePath.split('/').last}'
                             : '',
                       ),
-                      recordedAudioPath.isNotEmpty ? IconButton(
-                        icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
-                        onPressed: () {
-                          playRecording(recordedAudioPath);
-                        },
-                      ): const Text(''),
                       recordedAudioPath.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: deleteRecording,
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment
+                                  .spaceEvenly, // Adjust alignment here
+                              children: [
+                                Text(
+                                    'Duration: $finalDuration'), // Format the final duration
+                                IconButton(
+                                  icon: Icon(isPlaying
+                                      ? Icons.pause
+                                      : Icons.play_arrow),
+                                  onPressed: () {
+                                    playRecording(recordedAudioPath);
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: deleteRecording,
+                                ),
+                              ],
                             )
                           : const Text(''),
-                      recordedAudioPath.isNotEmpty
-                          ? const Text('Press to Delete Recording')
-                          : const Text(''),
+                      // recordedAudioPath.isNotEmpty
+                      //     ? const Text('Press to Delete Recording')
+                      //     : const Text(''),
                     ],
                   ),
                 Row(

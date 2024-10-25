@@ -54,6 +54,9 @@ dependencies:
   path_provider: ^2.1.4
   record: ^5.1.2
   get: ^4.6.6
+  flutter_launcher_icons: ^0.14.1
+  flutter_html: ^3.0.0-beta.2
+  super_editor: ^0.3.0-dev.9
 
 dev_dependencies:
   flutter_test:
@@ -71,10 +74,10 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 
-flutter_icons: 
-  android: true
-  ios: true
-  image_path: 'assets/ultimeet.png'
+# flutter_icons: 
+#   android: true
+#   ios: true
+#   image_path: 'assets/ultimeet.png'
 
 flutter:
 

@@ -59,7 +59,7 @@ class ActionItemsWidgetState extends State<ActionItemsWidget> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    _showAddItemModal(context);
+                    _showAddItemModal(context, false);
                   },
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
@@ -133,14 +133,14 @@ class ActionItemsWidgetState extends State<ActionItemsWidget> {
                               ),
                             ),
                           ),
-                          DataCell(Text(item['due_on']?.toString() ?? 'N/A')),
+                          DataCell(Text(item['end_date']?.toString() ?? 'N/A')),
                           DataCell(Text(item['status']?.toString() ?? 'N/A')),
                           DataCell(Row(
                             children: [
                               IconButton(
                                 icon: const Icon(Icons.edit, size: 18),
                                 onPressed: () {
-                                  _showAddItemModal(context, item);
+                                  _showAddItemModal(context, true, item);
                                 },
                               ),
                               IconButton(
@@ -162,7 +162,9 @@ class ActionItemsWidgetState extends State<ActionItemsWidget> {
   }
 
   // Function to show the Add Item modal
-  void _showAddItemModal(BuildContext context, [Map<String, dynamic>? item]) {
+  void _showAddItemModal(BuildContext context, bool isEditMode,
+      [Map<String, dynamic>? item]) {
+    print('Item id is: $item');
     if (item != null) {
       // Edit mode
       setState(() {
@@ -174,8 +176,8 @@ class ActionItemsWidgetState extends State<ActionItemsWidget> {
         reporterController.text = item['reporter']?['full_name'] ?? '';
         reporterId = item['reporter']?['id'];
         priorityValue = item['priority'] ?? 'MEDIUM';
-        dateController.text = item['due_on'] ?? '';
-        selectedDate = DateTime.tryParse(item['due_on'] ?? '');
+        dateController.text = item['end_date'] ?? '';
+        selectedDate = DateTime.tryParse(item['end_date'] ?? '');
         statusValue = item['status'] ?? 'PENDING';
       });
     }
@@ -306,38 +308,56 @@ class ActionItemsWidgetState extends State<ActionItemsWidget> {
                               ? 'PROGRESS'
                               : statusValue,
                         };
-                        final response =
-                            await apiService.updateActionItem(actionData);
-                        if (response.statusCode == 200 ||
-                            response.statusCode == 201) {
-                          Navigator.pop(context);
-                          widget.onUpdate();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content:
-                                    Text('Action Item updated successfully!')),
-                          );
+                        //final response = await apiService.updateActionItem(actionData);
+                        String errorMessage;
+                        if (isEditMode) {
+                          final response = await apiService.editActionItem(
+                              actionData, item!['id'].toString());
+                          if (response.statusCode == 200 ||
+                              response.statusCode == 201) {
+                            Navigator.pop(context);
+                            widget.onUpdate();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      'Action Item updated successfully!')),
+                            );
+                          } else {
+                            final responseBody =
+                                await response.stream.bytesToString();
+                            final errorData = jsonDecode(responseBody);
+                            errorMessage = errorData['message'];
+                            Fluttertoast.showToast(
+                                msg:
+                                    'Failed to update action item - $errorMessage',
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                                backgroundColor: Colors.red,
+                                textColor: Colors.white);
+                          }
                         } else {
-                          // Handle error
-                          final errorData = jsonDecode(response.body);
-                          final errorMessage = errorData['message'];
-                          //final errorCode = errorData['error_code'];
-
-                          Fluttertoast.showToast(
-                              msg: 'Failed to update action item - $errorMessage',
-                              toastLength: Toast.LENGTH_SHORT,
-                              gravity: ToastGravity.BOTTOM,
-                              backgroundColor: Colors.red,
-                              textColor: Colors.white);
-
-                          // ScaffoldMessenger.of(context).showSnackBar(
-                          //   SnackBar(
-                          //     content: Text(
-                          //         'Failed to update action item: $errorCode - $errorMessage'),
-                          //     backgroundColor: Colors.red,
-                          //     behavior: SnackBarBehavior.floating,
-                          //   ),
-                          // );
+                          final response =
+                              await apiService.updateActionItem(actionData);
+                          if (response.statusCode == 200 ||
+                              response.statusCode == 201) {
+                            Navigator.pop(context);
+                            widget.onUpdate();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      'Action Item updated successfully!')),
+                            );
+                          } else {
+                            final errorData = jsonDecode(response.body);
+                            errorMessage = errorData['message'];
+                            Fluttertoast.showToast(
+                                msg:
+                                    'Failed to update action item - $errorMessage',
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                                backgroundColor: Colors.red,
+                                textColor: Colors.white);
+                          }
                         }
                       },
                       child: const Text('Save'),
