@@ -356,6 +356,18 @@ class _InstantMeetingModalState extends State<InstantMeetingModal> {
   }
 
   Future<void> _uploadAudioFile() async {
+    if (recorderPaused) {
+      Fluttertoast.showToast(
+        msg: 'Please stop the recording before saving.',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+      return;
+    }
+
+    participantsList = participantsList.toSet().toList();
     print('Uploaded Path: $uploadedFilePath');
     print('Recorded Path: $recordedAudioPath');
     var data = {
@@ -373,6 +385,13 @@ class _InstantMeetingModalState extends State<InstantMeetingModal> {
         );
         if (response.statusCode == 200) {
           print('Audio uploaded successfully!');
+          Fluttertoast.showToast(
+            msg: 'Meeting Audio and Participants updated successfully!',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.green,
+            textColor: Colors.white,
+          );
           await apiService.addParticipantsInMeeting(data);
           await apiService.getAudioProcessing(widget.meetingId);
           Navigator.of(context).pop(true);
@@ -391,6 +410,13 @@ class _InstantMeetingModalState extends State<InstantMeetingModal> {
         );
       }
     } else {
+      Fluttertoast.showToast(
+        msg: 'No audio file to upload',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
       print('No audio file to upload');
     }
   }

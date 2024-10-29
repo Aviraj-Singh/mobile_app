@@ -92,7 +92,8 @@ class TalkTimeWidgetState extends State<TalkTimeWidget> {
                 try {
                   List<dynamic> rawTranscriptArray = jsonDecode(rawTranscript);
                   for (var entry in rawTranscriptArray) {
-                    if (entry['speaker'].contains(name)) {
+                    if (entry['speaker'] != null &&
+                        entry['speaker'].contains(name)) {
                       entry['speaker'] = updatedName + ',' + updatedEmail;
                     }
                   }

@@ -291,8 +291,22 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
   }
 
   Widget _buildParticipantsSection() {
-    List participants =
+    List<dynamic> participants =
         meetingData?['meetingDetails']?['data']?['participant_list'] ?? [];
+
+    // Use a Set to track unique participant IDs
+    Set<String> uniqueIds = {};
+    List<dynamic> uniqueParticipants = [];
+
+    for (var participant in participants) {
+      if (participant is Map && participant.containsKey('id')) {
+        String participantId = participant['id'].toString();
+        if (!uniqueIds.contains(participantId)) {
+          uniqueIds.add(participantId);
+          uniqueParticipants.add(participant);
+        }
+      }
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,7 +319,7 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
         Row(
           children: [
             Expanded(
-              child: participants.isEmpty
+              child: uniqueParticipants.isEmpty
                   ? const Padding(
                       padding: EdgeInsets.only(top: 7.0),
                       child: Text(
@@ -319,15 +333,15 @@ class MeetingMinutesPageState extends State<MeetingMinutesPage> {
                         children: [
                           for (var i = 0;
                               i <
-                                  (participants.length > 2
+                                  (uniqueParticipants.length > 2
                                       ? 2
-                                      : participants.length);
+                                      : uniqueParticipants.length);
                               i++)
-                            _buildParticipantAvatar(participants[i]),
+                            _buildParticipantAvatar(uniqueParticipants[i]),
                           if (participants.length > 2)
                             GestureDetector(
                               onTap: () =>
-                                  _showParticipantsDialog(participants),
+                                  _showParticipantsDialog(uniqueParticipants),
                               child: CircleAvatar(
                                 radius: 20,
                                 backgroundColor: Colors.grey[300],

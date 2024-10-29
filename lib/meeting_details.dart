@@ -16,11 +16,11 @@ class MeetingDetailsTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3, // Number of tabs
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Meeting Details'),
-          automaticallyImplyLeading: false, // Removes the back button
+          automaticallyImplyLeading: false,
           bottom: const TabBar(
             labelPadding: EdgeInsets.symmetric(horizontal: 4.0),
             tabs: [
@@ -44,13 +44,13 @@ class MeetingDetailsTabs extends StatelessWidget {
   Widget _buildSummaryTab() {
     var summaryData = meetingSummary['data'];
     if (summaryData != null && summaryData.isNotEmpty) {
-      String summaryTextString = summaryData[0]['summary_text']; // This is a string
-      List<dynamic> summaryTexts = summaryTextString.isNotEmpty
-          ? jsonDecode(summaryTextString)
-          : [];
+      String summaryTextString = summaryData[0]['summary_text'];
+      List<dynamic> summaryTexts =
+          summaryTextString.isNotEmpty ? jsonDecode(summaryTextString) : [];
 
       if (summaryTexts.isNotEmpty) {
-        String formattedSummary = summaryTexts.join("\n\n");
+        String formattedSummary =
+            summaryTexts.map((text) => _cleanText(text)).join("\n\n");
 
         return _buildCardWithContent(
           SingleChildScrollView(
@@ -72,13 +72,13 @@ class MeetingDetailsTabs extends StatelessWidget {
   Widget _buildDecisionTab() {
     var decisionData = meetingDecision['data'];
     if (decisionData != null && decisionData.isNotEmpty) {
-      String decisionTextString = decisionData[0]['decision_text']; // This is a string
-      List<dynamic> decisionTexts = decisionTextString.isNotEmpty
-          ? jsonDecode(decisionTextString)
-          : [];
+      String decisionTextString = decisionData[0]['decision_text'];
+      List<dynamic> decisionTexts =
+          decisionTextString.isNotEmpty ? jsonDecode(decisionTextString) : [];
 
       if (decisionTexts.isNotEmpty) {
-        String formattedDecision = decisionTexts.join("\n\n");
+        String formattedDecision =
+            decisionTexts.map((text) => _cleanText(text)).join("\n\n");
 
         return _buildCardWithContent(
           SingleChildScrollView(
@@ -100,10 +100,9 @@ class MeetingDetailsTabs extends StatelessWidget {
   Widget _buildTranscriptTab() {
     var transcriptData = meetingTranscription['data'];
     if (transcriptData != null && transcriptData.isNotEmpty) {
-      String transcriptString = transcriptData[0]['raw_transcript']; // This is a string
-      List<dynamic> rawTranscript = transcriptString.isNotEmpty
-          ? jsonDecode(transcriptString)
-          : [];
+      String transcriptString = transcriptData[0]['raw_transcript'];
+      List<dynamic> rawTranscript =
+          transcriptString.isNotEmpty ? jsonDecode(transcriptString) : [];
 
       if (rawTranscript.isNotEmpty) {
         return _buildCardWithContent(
@@ -120,7 +119,7 @@ class MeetingDetailsTabs extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 5),
-                  Text(transcriptEntry['text']),
+                  Text(_cleanText(transcriptEntry['text'])),
                   const Divider(),
                 ],
               );
@@ -149,5 +148,17 @@ class MeetingDetailsTabs extends StatelessWidget {
         child: content,
       ),
     );
+  }
+
+  String _cleanText(String text) {
+    final cleanedText = text
+        .replaceAll(RegExp(r'<[^>]*>'), '') // Remove HTML tags
+        .replaceAll(r'\\n', '\n') // Convert \n to actual newlines
+        .replaceAll(r'\\u2019', '\'') // Replace encoded apostrophes
+        .replaceAll(RegExp(r'[\\#*]+'), '') // Remove all backslashes, #, and *
+        .replaceAll(
+            RegExp(r'\"'), '"'); // Replace escaped quotes with actual quotes
+
+    return cleanedText.trim(); // Trim any leading/trailing whitespace
   }
 }
