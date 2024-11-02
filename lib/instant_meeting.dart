@@ -10,6 +10,7 @@ import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:async';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class InstantMeetingModal extends StatefulWidget {
   final List<dynamic> participants;
@@ -120,6 +121,7 @@ class _InstantMeetingModalState extends State<InstantMeetingModal> {
     uploadedFilePath = '';
     uploadedAttachmentFilePath = '';
     recordedAudioPath = '';
+    WakelockPlus.disable();
     super.dispose();
   }
 
@@ -278,6 +280,7 @@ class _InstantMeetingModalState extends State<InstantMeetingModal> {
       setState(() {
         isRecording = true;
       });
+      WakelockPlus.enable();
       stopwatch.start();
       _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
         if (!stopwatch.isRunning) t.cancel();
@@ -286,11 +289,8 @@ class _InstantMeetingModalState extends State<InstantMeetingModal> {
         });
       });
       if (await recorder.hasPermission()) {
-        //give path to store the audio
-        // Get the directory for the app.
         Directory appDocDir = await getApplicationDocumentsDirectory();
         String appDocPath = appDocDir.path;
-        // Create a file path to store the audio.
         recordedAudioPath = '$appDocPath/recording.m4a';
         await recorder.start(const RecordConfig(), path: recordedAudioPath);
         setState(() {
@@ -310,7 +310,9 @@ class _InstantMeetingModalState extends State<InstantMeetingModal> {
       setState(() {
         isRecording = false;
         processing = true;
+        recorderPaused = false;
       });
+      WakelockPlus.disable();
       finalDuration = formatTime(timePassed);
       stopwatch.stop();
       stopwatch.reset();
@@ -368,13 +370,48 @@ class _InstantMeetingModalState extends State<InstantMeetingModal> {
     }
 
     participantsList = participantsList.toSet().toList();
+
     print('Uploaded Path: $uploadedFilePath');
     print('Recorded Path: $recordedAudioPath');
+
+    final fileLimitMB = 250;
+
+    if (uploadedFilePath.isNotEmpty) {
+      final uploadedFile = File(uploadedFilePath);
+      final uploadedFileSizeMB = await uploadedFile.length() / (1024 * 1024);
+      print('File size is: $uploadedFileSizeMB');
+      if (uploadedFileSizeMB > fileLimitMB) {
+        Fluttertoast.showToast(
+          msg: 'Uploaded file exceeds the 250MB limit.',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+        );
+        return;
+      }
+    }
+
+    if (recordedAudioPath.isNotEmpty) {
+      final recordedFile = File(recordedAudioPath);
+      final recordedFileSizeMB = await recordedFile.length() / (1024 * 1024);
+      print('File size is: $recordedFileSizeMB');
+      if (recordedFileSizeMB > fileLimitMB) {
+        Fluttertoast.showToast(
+          msg: 'Recorded audio file exceeds the 250MB limit.',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+        );
+        return;
+      }
+    }
+
     var data = {
       'meeting': widget.meetingId,
       'participant_list': participantsList,
     };
-    print('Data is: $data');
     if (uploadedFilePath.isNotEmpty || recordedAudioPath.isNotEmpty) {
       try {
         final response = await apiService.uploadAudio(

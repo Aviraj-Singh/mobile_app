@@ -56,7 +56,7 @@ dependencies:
   get: ^4.6.6
   flutter_launcher_icons: ^0.14.1
   flutter_html: ^3.0.0-beta.2
-  super_editor: ^0.3.0-dev.9
+  wakelock_plus: ^1.2.8
 
 dev_dependencies:
   flutter_test:

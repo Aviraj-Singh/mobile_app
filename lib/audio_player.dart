@@ -82,27 +82,33 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
 
             for (var start in starts) {
               if (start is double) {
-                double positionPercent =
-                    start.toDouble() / totalDuration.inMilliseconds.toDouble();
+                double positionPercent = start / totalDuration.inMilliseconds;
 
-                markers.add(Align(
-                  alignment: Alignment((2 * positionPercent) - 1,
-                      0), // Align marker horizontally
-                  child: GestureDetector(
-                    onTap: () {
-                      // Move the audio to this position when marker is tapped
-                      _audioPlayer.seek(Duration(milliseconds: start.toInt()));
-                    },
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: avatarColor,
+                markers.add(
+                  Padding(
+                    padding: const EdgeInsets.only(
+                        left: 8.0, right: 8.0), // Adjust this value as needed
+                    child: Align(
+                      alignment: Alignment((positionPercent * 2) - 1,
+                          0), // Align marker horizontally
+                      child: GestureDetector(
+                        onTap: () {
+                          // Move the audio to this position when marker is tapped
+                          _audioPlayer
+                              .seek(Duration(milliseconds: start.toInt()));
+                        },
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: avatarColor,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ));
+                );
               } else {
                 // Handle the case where start is not a double
                 print(
@@ -142,15 +148,22 @@ class AudioPlayerWidgetState extends State<AudioPlayerWidget> {
         Stack(
           alignment: Alignment.centerLeft,
           children: [
-            Slider(
-              min: 0.0,
-              max: totalDuration.inSeconds.toDouble(),
-              value: currentPosition.inSeconds.toDouble(),
-              onChanged: (value) {
-                setState(() {
-                  _audioPlayer.seek(Duration(seconds: value.toInt()));
-                });
-              },
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                thumbShape: const RoundSliderThumbShape(
+                    enabledThumbRadius: 5.0), // Adjust to match breakpoint size
+                overlayShape: const RoundSliderOverlayShape(overlayRadius: 7.0),
+              ),
+              child: Slider(
+                min: 0.0,
+                max: totalDuration.inSeconds.toDouble(),
+                value: currentPosition.inSeconds.toDouble(),
+                onChanged: (value) {
+                  setState(() {
+                    _audioPlayer.seek(Duration(seconds: value.toInt()));
+                  });
+                },
+              ),
             ),
             // Add breakpoints on top of the slider
             Positioned.fill(
