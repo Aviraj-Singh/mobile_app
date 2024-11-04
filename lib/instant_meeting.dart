@@ -371,6 +371,14 @@ class _InstantMeetingModalState extends State<InstantMeetingModal> {
 
     participantsList = participantsList.toSet().toList();
 
+    // Filter out participants that are already in the original list
+    List<String> originalParticipantIds = widget.participants
+        .map((participant) => participant['id'].toString())
+        .toList();
+    List<String> newParticipantIds = participantsList
+        .where((id) => !originalParticipantIds.contains(id))
+        .toList();
+
     print('Uploaded Path: $uploadedFilePath');
     print('Recorded Path: $recordedAudioPath');
 
@@ -410,7 +418,7 @@ class _InstantMeetingModalState extends State<InstantMeetingModal> {
 
     var data = {
       'meeting': widget.meetingId,
-      'participant_list': participantsList,
+      'participant_list': newParticipantIds,
     };
     if (uploadedFilePath.isNotEmpty || recordedAudioPath.isNotEmpty) {
       try {
@@ -418,7 +426,7 @@ class _InstantMeetingModalState extends State<InstantMeetingModal> {
           meetingId: widget.meetingId,
           uploadedFilePath: uploadedFilePath,
           recordedAudioPath: recordedAudioPath,
-          selectedUserIds: participantsList,
+          selectedUserIds: newParticipantIds,
         );
         if (response.statusCode == 200) {
           print('Audio uploaded successfully!');
