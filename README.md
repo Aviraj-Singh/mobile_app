@@ -1,14 +1,14 @@
-# Ultimeet - Version 1
+# Mobile App 
 
-Welcome to Ultimeet, a versatile and intuitive mobile application developed using Flutter. Ultimeet is designed to provide a seamless meeting management experience, integrating key features to streamline your scheduling and communication needs.
+Welcome to the app
 
-## About Ultimeet
+## About App
 
-Ultimeet is crafted with a focus on making meetings and collaborations easier. Version 1 serves as the foundation for a robust meeting management tool that will evolve with more features and optimizations. Whether you are setting up one-on-one catch-ups or large team discussions, Ultimeet simplifies the process.
+The App is crafted with a focus on making meetings and collaborations easier. Version 1 serves as the foundation for a robust meeting management tool that will evolve with more features and optimizations. Whether you are setting up one-on-one catch-ups or large team discussions, Ultimeet simplifies the process.
 
 ## Key Features in Version 1
 
-- **Cross-Platform Support**: Ultimeet is developed using Flutter, ensuring consistent performance across both Android and iOS devices.
+- **Cross-Platform Support**: It is developed using Flutter, ensuring consistent performance across both Android and iOS devices.
 - **User-Friendly Interface**: The app provides a clean and easy-to-navigate interface for efficient meeting management.
 - **SMS Interception**: Integrated functionality to manage SMS notifications, currently optimized for Android devices.
 - **Scalable Backend Integration**: Backend support to manage data securely and efficiently, with real-time updates to improve user experience.
