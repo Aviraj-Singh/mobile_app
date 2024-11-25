@@ -17,12 +17,11 @@ The App is crafted with a focus on making meetings and collaborations easier. Ve
 
 ## Getting Started
 
-To set up and start using Ultimeet, ensure that you have Flutter properly installed on your development system. If you are new to Flutter, explore these resources to get started:
+To set up and start using this app, ensure that you have Flutter properly installed on your development system. If you are new to Flutter, explore these resources to get started:
 
 - [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
 - [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
 
-For comprehensive guidance on Flutter development, please refer to the [official Flutter documentation](https://docs.flutter.dev/), which offers a wide range of tutorials, samples, and API references.
 
 ## Version Information
 
